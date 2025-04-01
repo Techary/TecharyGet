@@ -1,7 +1,7 @@
-$folderPath = "c:\temp\ZoomInstallation"
-$logFile = "$folderPath\ZoomInstaller.log"
-$filex64 = "$folderPath\ZoomInstallerx64.msi"
-$filearm64 = "$folderPath\ZoomInstallerarm64.msi"
+$folderPath = "c:\logs\TecharyGetLogs\Installs\Zoom"
+$logFile = "$folderPath\Install-Zoom.log"
+$filex64 = "$folderPath\Zoomx64.msi"
+$filearm64 = "$folderPath\Zoomarm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
