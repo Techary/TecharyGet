@@ -45,7 +45,7 @@ try {
     $yamlText = $yamlContent.Content
 
     # Find the InstallerUrls for x64 and arm64
-    $patternX64 = 'InstallerUrl:\s*(\S+.*x64.*\.msi)'
+    $patternX64 = 'InstallerUrl:\s*(\S+.*64.*\.msi)'
     $patternARM64 = 'InstallerUrl:\s*(\S+.*arm64.*\.msi)'
 
     $installerUrlX64 = $null
@@ -109,22 +109,20 @@ try {
     }
 
     # Start installation here
-    if ($arch.CSDescription -eq "ARM processor family") {
-        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$filearm64`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
+    if ($arch -like "*ARM*") {
         Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
         $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Chrome_Installer_arm64.msi"
         Rename-Item -Path $local:filex64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
-        Start-Process -FilePath $renamedFile -ArgumentList "/quiet" -Wait -ErrorAction Stop
+        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
         Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
         Invoke-LogMessage "Removed installer: $renamedFile"
     } else {
-        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$filex64`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
         Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
         $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Chrome_Installer_x64.msi"
         Rename-Item -Path $local:filex64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
-        Start-Process -FilePath $renamedFile -ArgumentList "/quiet" -Wait -ErrorAction Stop
+        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
         Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
         Invoke-LogMessage "Removed installer: $renamedFile"
     }
