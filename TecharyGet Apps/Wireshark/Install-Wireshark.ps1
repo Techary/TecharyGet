@@ -1,7 +1,7 @@
-$folderPath = "c:\temp\WiresharkInstallation"
-$logFile = "$folderPath\WiresharkInstaller.log"
-$filex64 = "$folderPath\WiresharkInstallerx64.msi"
-$filearm64 = "$folderPath\WiresharkInstallerarm64.msi"
+$folderPath = "c:\logs\TecharyGetLogs\Installs\Wireshark"
+$logFile = "$folderPath\Install-Wireshark.log"
+$filex64 = "$folderPath\Wiresharkx64.msi"
+$filearm64 = "$folderPath\Wiresharkarm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
