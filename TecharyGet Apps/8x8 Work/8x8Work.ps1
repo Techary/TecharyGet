@@ -1,8 +1,8 @@
-$folderPath = "c:\temp\8x8workInstallation"
+$folderPath = "c:\logs\TecharyGetLogs\Installs\8x8work"
 $logFile = "$folderPath\8x8work.log"
 $filex64 = "$folderPath\8x8workx64.msi"
 $filearm64 = "$folderPath\8x8workarm64.msi"
-$arch = get-computerinfo
+$arch = (Get-ComputerInfo).CSDescription
 
 # Function to log messages
 function Invoke-LogMessage {
