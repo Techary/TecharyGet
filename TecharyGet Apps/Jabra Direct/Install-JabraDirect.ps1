@@ -1,8 +1,8 @@
-$folderPath = "c:\temp\JabraDirectInstallation"
-$logFile = "$folderPath\jabradirect.log"
-$filex64 = "$folderPath\jabradirectx64.exe"
-$filearm64 = "$folderPath\jabradirectarm64.exe"
-$arch = get-computerinfo
+$folderPath = "c:\logs\TecharyGetLogs\Installs\JabraDirect"
+$logFile = "$folderPath\Install-JabraDirect.log"
+$filex64 = "$folderPath\JabraDirectx64.msi"
+$filearm64 = "$folderPath\JabraDirectarm64.msi"
+$arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
 # Function to log messages
