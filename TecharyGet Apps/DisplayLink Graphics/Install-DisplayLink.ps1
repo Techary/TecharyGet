@@ -3,6 +3,7 @@ $logFile = "$folderPath\DisplayLink.log"
 $filex64 = "$folderPath\DisplayLinkx64.msi"
 $filearm64 = "$folderPath\DisplayLinkarm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
+$Download = New-Object net.webclient
 
 # Function to log messages
 function Invoke-LogMessage {
