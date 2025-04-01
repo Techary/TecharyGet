@@ -65,9 +65,9 @@ try {
     # Start installation here
     if ($arch -like "*ARM*") {
         Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$arm64Download`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
-        Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+        Invoke-LogMessage "Downloaded x64 installer to $local:filearm64"
         $renamedFile = Join-Path -Path $local:folderPath -ChildPath "8x8Work_Installer_arm64.msi"
-        Rename-Item -Path $local:filex64 -NewName $renamedFile
+        Rename-Item -Path $local:filearm64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
         Start-Process -FilePath $renamedFile -ArgumentList "/quiet" -Wait -ErrorAction Stop
         Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
