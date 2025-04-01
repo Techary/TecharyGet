@@ -1,8 +1,8 @@
-$folderPath = "c:\temp\visualstudiocode"
-$logFile = "$folderPath\GitHubDesktopInstaller.log"
-$filex64 = "$folderPath\GitHubDesktopInstallerx64.msi"
-$filearm64 = "$folderPath\GitHubDesktopInstallerarm64.msi"
-$arch = get-computerinfo
+$folderPath = "c:\logs\TecharyGetLogs\Installs\GitHubDesktop"
+$logFile = "$folderPath\Install-GitHubDesktop.log"
+$filex64 = "$folderPath\GitHubDesktopx64.msi"
+$filearm64 = "$folderPath\GitHubDesktoparm64.msi"
+$arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
 # Function to log messages
