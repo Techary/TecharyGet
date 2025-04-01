@@ -3,6 +3,7 @@ $logFile = "$folderPath\8x8work.log"
 $filex64 = "$folderPath\8x8workx64.msi"
 $filearm64 = "$folderPath\8x8workarm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
+$Download = New-Object net.webclient
 
 # Function to log messages
 function Invoke-LogMessage {
