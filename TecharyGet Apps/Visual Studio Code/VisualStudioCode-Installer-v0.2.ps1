@@ -1,8 +1,8 @@
-$folderPath = "c:\temp\visualstudiocodeinstallation"
-$logFile = "$folderPath\visualstudiocode.log"
-$filex64 = "$folderPath\visualstudiocodeinstallerx64.exe"
-$filearm64 = "$folderPath\visualstudiocodeinstallerarm64.exe"
-$arch = get-computerinfo
+$folderPath = "c:\logs\TecharyGetLogs\Installs\VSCode"
+$logFile = "$folderPath\Install-VSCode.log"
+$filex64 = "$folderPath\VSCodex64.msi"
+$filearm64 = "$folderPath\VSCodearm64.msi"
+$arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
 # Function to log messages
