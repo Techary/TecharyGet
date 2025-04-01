@@ -25,25 +25,22 @@ try {
     $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/8/8x8/Work"
     $headers = @{
         "User-Agent" = "PowerShell"
-        "Accept" = "application/vnd.github.v3+json"
-    }
+        "Accept" = "application/vnd.github.v3+json"}
     $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
-
     $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
         try { [version]$_.name } catch { $null }
     } | Where-Object { $_ -ne $null }
-
     $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
     Invoke-LogMessage "Latest version found: $latestVersion"
-
+   
     # Build YAML URL from Github to gather Installation URL
     $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/8/8x8/Work/$latestVersion/8x8.Work.installer.yaml"
     Invoke-LogMessage "Downloading YAML from: $yamlUrl"
-
-    # Step 3: Download YAML content
+  
+    # Download YAML content
     $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
     $yamlText = $yamlContent.Content
-
+   
     # Find the first InstallerUrl
     $pattern = 'InstallerUrl:\s*(\S+)'
     if ($yamlText -match $pattern) {
@@ -52,28 +49,38 @@ try {
     } else {
         throw "Installer URL not found in YAML."
     }
-
+  
     # Determine architecture and download path
-    $filex64 = "${folderPath}\8x8Work_x64.msi"
-    $filearm64 = "${folderPath}\8x8Work_arm64.msi"
-    $Download = New-Object System.Net.WebClient
-    $arch = (Get-ComputerInfo).CSDescription
-
+    $x64Download= "${folderPath}\8x8Work_x64.msi"
+    $arm64Download = "${folderPath}\8x8Work_arm64.msi"
     # Download the installer
     if ($arch.CSDescription -eq "ARM processor family") {
-        $Download.DownloadFile($latestUrlARM64, $filearm64)
-        Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+        $Download.DownloadFile($latestUrlARM64, $arm64Download)
+        Invoke-LogMessage "Downloaded ARM64 installer to $arm64Download"
     } 
     else {
-        $Download.DownloadFile($installerUrl, $filex64)
-        Invoke-LogMessage "Downloaded x64 installer to $filex64"
+        $Download.DownloadFile($installerUrl, $x64Download)
+        Invoke-LogMessage "Downloaded x64 installer to $x64Download"
     }
-
     # Start installation here
-    if ($arch.CSDescription -eq "ARM processor family") {
-        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$filearm64`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
+    if ($arch -like "*ARM*") {
+        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$arm64Download`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
+        Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "8x8Work_Installer_arm64.msi"
+        Rename-Item -Path $local:filex64 -NewName $renamedFile
+        Invoke-LogMessage "Renamed installer to: $renamedFile"
+        Start-Process -FilePath $renamedFile -ArgumentList "/quiet" -Wait -ErrorAction Stop
+        Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+        Invoke-LogMessage "Removed installer: $renamedFile"
     } else {
-        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$filex64`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
+        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$x64Download`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
+        Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "8x8Work_Installer_x64.msi"
+        Rename-Item -Path $local:filex64 -NewName $renamedFile
+        Invoke-LogMessage "Renamed installer to: $renamedFile"
+        Start-Process -FilePath $renamedFile -ArgumentList "/quiet" -Wait -ErrorAction Stop
+        Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+        Invoke-LogMessage "Removed installer: $renamedFile"
     }
     Invoke-LogMessage "Successfully installed 8x8 Work."
 } catch {
