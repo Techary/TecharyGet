@@ -1,8 +1,8 @@
-$folderPath = "c:\temp\SlackInstallation"
-$logFile = "$folderPath\SlackInstaller.log"
-$filex64 = "$folderPath\SlackSetup-x64.msi"
-$filearm64 = "$folderPath\SlackSetup-arm64.msi"
-$arch = get-computerinfo
+$folderPath = "c:\logs\TecharyGetLogs\Installs\Slack"
+$logFile = "$folderPath\Install-Slack.log"
+$filex64 = "$folderPath\Slackx64.msi"
+$filearm64 = "$folderPath\Slackarm64.msi"
+$arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
 # Function to log messages
