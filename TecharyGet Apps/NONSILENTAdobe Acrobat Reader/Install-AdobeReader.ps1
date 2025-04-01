@@ -1,6 +1,8 @@
-$folderPath = "c:\temp\AdobeReaderInstallation"
-$logFile = "$folderPath\AdobeReaderInstaller.log"
-$filex64 = "$folderPath\AdobeReaderx64.exe"
+$folderPath = "c:\logs\TecharyGetLogs\Installs\AdobeReader"
+$logFile = "$folderPath\Install-AdobeReader.log"
+$filex64 = "$folderPath\AdobeReaderx64.msi"
+$filearm64 = "$folderPath\AdobeReaderarm64.msi"
+$arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
 # Function to log messages
