@@ -1,7 +1,7 @@
-$folderPath = "c:\temp\DisplayLinkInstallation"
-$logFile = "$folderPath\DisplayLink-Install.log"
-$filex64 = "$folderPath\DisplayLink_Installer_x64.msi"
-$filearm64 = "$folderPath\DisplayLink_Installer-arm64.msi"
+$folderPath = "c:\logs\TecharyGetLogs\Installs\DisplayLink"
+$logFile = "$folderPath\DisplayLink.log"
+$filex64 = "$folderPath\DisplayLinkx64.msi"
+$filearm64 = "$folderPath\DisplayLinkarm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
 
 # Function to log messages
