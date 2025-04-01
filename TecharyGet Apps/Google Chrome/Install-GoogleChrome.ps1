@@ -1,8 +1,9 @@
-$folderPath = "c:\temp\ChromeInstallation"
-$logFile = "$folderPath\Chrome-Install.log"
-$filex64 = "$folderPath\Chrome_Installer_x64.msi"
-$filearm64 = "$folderPath\Chrome_Installer-arm64.msi"
+$folderPath = "c:\logs\TecharyGetLogs\Installs\GoogleChrome"
+$logFile = "$folderPath\Install-GoogleChrome.log"
+$filex64 = "$folderPath\GoogleChromex64.msi"
+$filearm64 = "$folderPath\GoogleChromearm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
+$Download = New-Object net.webclient
 
 # Function to log messages
 function Invoke-LogMessage {
