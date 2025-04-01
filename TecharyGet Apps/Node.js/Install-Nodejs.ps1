@@ -1,7 +1,8 @@
-$folderPath = "c:\temp\NodeJSInstallation"
-$logFile = "$folderPath\NodeJSInstaller.log"
-$filex64 = "$folderPath\nodejs-x64.msi"
-$filearm64 = "$folderPath\nodejs-arm64.msi"
+$folderPath = "c:\logs\TecharyGetLogs\Installs\Nodejs"
+$logFile = "$folderPath\Install-Nodejs.log"
+$filex64 = "$folderPath\Nodejsx64.msi"
+$filearm64 = "$folderPath\Nodejsarm64.msi"
+$arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
 # Function to log messages
