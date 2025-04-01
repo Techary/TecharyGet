@@ -1,7 +1,7 @@
-$folderPath = "c:\temp\mozillafirefoxinstallation"
-$logFile = "$folderPath\mozillafirefox.log"
-$filex64 = "$folderPath\mozillafirefoxinstallerx64.exe"
-$filearm64 = "$folderPath\mozillafirefoxinstallerarm64.exe"
+$folderPath = "c:\logs\TecharyGetLogs\Installs\MozillaFirefox"
+$logFile = "$folderPath\Install-MozillaFirefox.log"
+$filex64 = "$folderPath\MozillaFirefoxx64.msi"
+$filearm64 = "$folderPath\MozillaFirefoxarm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
