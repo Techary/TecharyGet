@@ -1,8 +1,8 @@
-$folderPath = "c:\temp\powertoysinstallation"
-$logFile = "$folderPath\powertoys.log"
-$filex64 = "$folderPath\powertoysnstallerx64.exe"
-$filearm64 = "$folderPath\powertoysinstallerarm64.exe"
-$arch = get-computerinfo
+$folderPath = "c:\logs\TecharyGetLogs\Installs\PowerToys"
+$logFile = "$folderPath\Install-PowerToys.log"
+$filex64 = "$folderPath\PowerToysx64.msi"
+$filearm64 = "$folderPath\PowerToysarm64.msi"
+$arch = (Get-ComputerInfo).CSDescription
 $Download = New-Object net.webclient
 
 # Function to log messages
