@@ -10,7 +10,11 @@ param (
     [string]$AppLogFileNameWithDate,
     [string]$AppLogFilePathWithDate,
     [string]$folderPath = "c:\temp\TecharyGetInstallationLogs",
-    [string]$arch
+    [string]$arch,
+    [string]$customerID,
+    [string]$token,
+    [string]$serveraddress,
+    [string]$customername
 )
 
 # Initialize variables
@@ -77,7 +81,11 @@ if (-not (Test-Path -Path $script:folderPath)) {
 # Main function to handle installation
 function Install-TecharyGetPackage {
     param (
-        [string]$AppName
+        [string]$AppName,
+        [string]$customerID,
+        [string]$token,
+        [string]$serveraddress,
+        [string]$customername
     )
 
     # Construct file paths using Join-Path and the AppName
@@ -658,6 +666,8 @@ function Install-TecharyGetPackage {
     ############## DisplayLink Installer ######################
     elseif ($AppName -eq "DisplayLink") {
         try {
+            $DisplayLinkFolder = "C:\temp\TecharyGetInstallationLogs\PublicSoftware - DisplayLink\DisplayLink_Win10RS.msi"
+
             # Get latest version from GitHub API
             $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/d/DisplayLink/GraphicsDriver"
             $headers = @{
@@ -677,67 +687,17 @@ function Install-TecharyGetPackage {
             $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/d/DisplayLink/GraphicsDriver/$latestVersion/DisplayLink.GraphicsDriver.installer.yaml"
             Invoke-LogMessage "Downloading YAML from: $yamlUrl"
         
-            # Download YAML content
+            # Step 3: Download YAML content
             $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
             $yamlText = $yamlContent.Content
         
-            # Find the InstallerUrls for x64 and arm64
-            $patternX64 = 'InstallerUrl:\s*(\S+)'
-            $patternARM64 = 'InstallerUrl:\s*(\S+)'
-        
-            $installerUrlX64 = $null
-            $installerUrlARM64 = $null
-        
-            if ($yamlText -match $patternX64) {
-                $installerUrlX64 = $matches[1]
-                Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
-            }
-        
-            if ($yamlText -match $patternARM64) {
-                $installerUrlARM64 = $matches[1]
-                Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
-            }
-        
-            if (-not $installerUrlX64 -and -not $installerUrlARM64) {
-                throw "Installer URLs not found in YAML."
-            }
-        
-            # Determine architecture and download the correct installer
-            $arch = (Get-ComputerInfo).CSDescription
-        
-            if ($arch -like "*ARM*") {
-                if (-not $installerUrlARM64) {
-                    throw "ARM64 installer URL not found in YAML."
-                }
-                try {
-                    Invoke-WebRequest -Uri $installerUrlARM64 -OutFile $filearm64
-                    Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
-                } catch {
-                    Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
-                    throw
-                }
-        
-                # Verify the file exists
-                if (-not (Test-Path -Path $filearm64)) {
-                    throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
-                }
-        
+            # Find the first InstallerUrl
+            $pattern = 'InstallerUrl:\s*(\S+)'
+            if ($yamlText -match $pattern) {
+                $installerUrl = $matches[1]
+                Invoke-LogMessage "Installer URL: $installerUrl"
             } else {
-                if (-not $installerUrlX64) {
-                    throw "x64 installer URL not found in YAML."
-                }
-                try {
-                    Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
-                    Invoke-LogMessage "Downloaded x64 installer to $filex64"
-                } catch {
-                    Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
-                    throw
-                }
-        
-                # Verify the file exists
-                if (-not (Test-Path -Path $filex64)) {
-                    throw "The x64 installer file does not exist at $filex64. Download may have failed."
-                }
+                throw "Installer URL not found in YAML."
             }
         
             # Download the installer ZIP file
@@ -760,35 +720,29 @@ function Install-TecharyGetPackage {
             if (-not $msiFile) {
                 throw "MSI file not found in extracted ZIP."
             }
-            Invoke-LogMessage "Found MSI file: $msiFile"
-        
-        
+            Invoke-LogMessage "Found MSI file: $msiFile.FullName"
+
             # Start installation here
             if ($arch -like "*ARM*") {
-                Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-                $renamedFile = Join-Path -Path "$local:folderPath/PublicSoftware - DisplayLink" -ChildPath "DisplayLink_Win10RS.msi"
-                Rename-Item -Path "$local:folderPath/PublicSoftware - DisplayLink\DisplayLink_Win10RS.msi" -NewName $renamedFile
+                $renamedFile = Join-Path -Path $folderPath -ChildPath "DisplayLink_arm64.msi"
+                Move-Item -Path $msiFile.FullName -Destination $renamedFile -Force
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
-                Remove-Item -Path "$local:folderPath/PublicSoftware - DisplayLink" -Force # Remove the renamed file after installation
-                Remove-Item -Path "C:\temp\DisplayLink_arm64.zip" -Force
+                Remove-Item -Path $renamedFile -Force # Remove the renamed file after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
             } else {
-                Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-                $renamedFile = Join-Path -Path "$local:folderPath/PublicSoftware - DisplayLink" -ChildPath "DisplayLink_Win10RS.msi"
-                Rename-Item -Path "$local:folderPath/PublicSoftware - DisplayLink\DisplayLink_Win10RS.msi" -NewName $renamedFile
+                $renamedFile = Join-Path -Path $folderPath -ChildPath "DisplayLink_x64.msi"
+                Move-Item -Path $msiFile.FullName -Destination $renamedFile -Force
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
-                Remove-Item -Path "$local:folderPath/PublicSoftware - DisplayLink" -Force # Remove the renamed file after installation
-                Remove-Item -Path "C:\temp\DisplayLink_x64.zip" -Force
+                Remove-Item -Path $renamedFile -Force # Remove the renamed file after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
             }
             Invoke-LogMessage "Successfully installed DisplayLink."
         } catch {
             Invoke-LogMessage "Error installing DisplayLink: $($_.Exception.Message)"
         }
-    
-}
+    }
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
@@ -906,42 +860,103 @@ function Install-TecharyGetPackage {
     ############## Node.js Installer ######################
     elseif ($AppName -eq "Nodejs"){
         try {
-            # Fetch the latest version from the Node.js distribution page
-            $nodejsUrl = "https://nodejs.org/dist/"
-            $response = Invoke-WebRequest -Uri $nodejsUrl -UseBasicParsing
-            $latestVersion = ($response.Content -split "`n" | Select-String -Pattern 'v\d+\.\d+\.\d+/' | ForEach-Object { ($_ -match 'v\d+\.\d+\.\d+') | Out-Null; $matches[0] }) | Sort-Object -Descending | Select-Object -First 1
+            # Get latest version from GitHub API
+            $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/o/OpenJS/NodeJS"
+            $headers = @{
+                "User-Agent" = "PowerShell"
+                "Accept" = "application/vnd.github.v3+json"
+            }
+            $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
         
-            if (-not $latestVersion) {
-                throw "Unable to determine the latest Node.js version."
+            $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
+                try { [version]$_.name } catch { $null }
+            } | Where-Object { $_ -ne $null }
+        
+            $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
+            Invoke-LogMessage "Latest version found: $latestVersion"
+        
+            # Build YAML URL from Github to gather Installation URL
+            $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/o/OpenJS/NodeJS/${latestVersion}/OpenJS.NodeJS.installer.yaml"
+            Invoke-LogMessage "Downloading YAML from: $yamlUrl"
+        
+            # Download YAML content
+            $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
+            $yamlText = $yamlContent.Content
+        
+            # Find the InstallerUrls for x64 and arm64
+            $patternX64 = 'InstallerUrl:\s*(\S*/node-v\S*-x64\.msi)'
+            $patternARM64 = 'InstallerUrl:\s*(\S*/node-v\S*-arm64\.msi)'
+        
+            $installerUrlX64 = $null
+            $installerUrlARM64 = $null
+        
+            if ($yamlText -match $patternX64) {
+                $installerUrlX64 = $matches[1]
+                Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
             }
         
-            Invoke-LogMessage "Determined latest Node.js version: $latestVersion"
+            if ($yamlText -match $patternARM64) {
+                $installerUrlARM64 = $matches[1]
+                Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
+            }
         
-            # Construct the download URLs
-            $baseUrl = "$nodejsUrl$latestVersion/"
-            $urlx64 = "$baseUrl/node-$latestVersion-x64.msi"
-            $urlarm64 = "$baseUrl/node-$latestVersion-arm64.msi"
+            if (-not $installerUrlX64 -and -not $installerUrlARM64) {
+                throw "Installer URLs not found in YAML."
+            }
         
-            Invoke-LogMessage "Constructed x64 URL: $urlx64"
-            Invoke-LogMessage "Constructed ARM64 URL: $urlarm64"
+            # Determine architecture and download the correct installer
+            $arch = (Get-ComputerInfo).CSDescription
         
-            # Download installers
+            if ($arch -eq "ARM processor family") {
+                if (-not $installerUrlARM64) {
+                    throw "ARM64 installer URL not found in YAML."
+                }
+                try {
+                    Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
+                    Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+                } catch {
+                    Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
+                    throw
+                }
+        
+                # Verify the file exists
+                if (-not (Test-Path -Path $filearm64)) {
+                    throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
+                }
+        
+            } else {
+                if (-not $installerUrlX64) {
+                    throw "x64 installer URL not found in YAML."
+                }
+                try {
+                    Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
+                    Invoke-LogMessage "Downloaded x64 installer to $filex64"
+                } catch {
+                    Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
+                    throw
+                }
+        
+                # Verify the file exists
+                if (-not (Test-Path -Path $filex64)) {
+                    throw "The x64 installer file does not exist at $filex64. Download may have failed."
+                }
+            }
+        
+            # Start installation here
             if ($arch -like "*ARM*") {
-                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filearm64
-                Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Nodejs_Installer_arm64.msi"
-                Rename-Item -Path $local:filex64 -NewName $renamedFile
+                Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Nodejs_Installer_arm64.exe"
+                Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
-                Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
+                Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
             } else {
-                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Nodejs_Installer_x64.msi"
+                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Nodejs_Installer_x64.exe"
                 Rename-Item -Path $local:filex64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
-                Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
+                Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
             }
@@ -1506,12 +1521,6 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
     ############## Techary Nable Installer ######################
     elseif($AppName -eq "Nable"){
-        param(
-        [string]$customerID,
-        [string]$token,
-        [string]$serveraddress,
-        [string]$customername
-        )
         if (-not (Test-Path "C:\temp")) 
             {New-Item -ItemType Directory -Path "C:\temp"
             write-host "C:\temp directory created"}
@@ -1620,11 +1629,140 @@ function Install-TecharyGetPackage {
                 Stop-Transcript
                 exit 0}
     }
-
+############################################################################################################################################
+############################################################################################################################################
+############################################################################################################################################
+    ############## Bitwarden Installer ######################
+    elseif($AppName -eq "Bitwarden"){
+        try {
+            # Get latest version from GitHub API
+            $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/b/Bitwarden/Bitwarden"
+            $headers = @{
+                "User-Agent" = "PowerShell"
+                "Accept" = "application/vnd.github.v3+json"
+            }
+            $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
+        
+            $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
+                try { [version]$_.name } catch { $null }
+            } | Where-Object { $_ -ne $null }
+        
+            $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
+            Invoke-LogMessage "Latest version found: $latestVersion"
+        
+            # Build YAML URL from Github to gather Installation URL
+            $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/b/Bitwarden/Bitwarden/${latestVersion}/Bitwarden.Bitwarden.installer.yaml"
+            Invoke-LogMessage "Downloading YAML from: $yamlUrl"
+        
+            # Download YAML content
+            $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
+            $yamlText = $yamlContent.Content
+        
+            # Find the InstallerUrls for x64 and arm64
+            $patternX64 = 'InstallerUrl:\s*(\S*/Bitwarden-Installer-\S+\.exe)'
+            $patternARM64 = 'InstallerUrl:\s*(\S*/Bitwarden-Installer-\S+\.exe)'
+        
+            $installerUrlX64 = $null
+            $installerUrlARM64 = $null
+        
+            if ($yamlText -match $patternX64) {
+                $installerUrlX64 = $matches[1]
+                Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
+            }
+        
+            if ($yamlText -match $patternARM64) {
+                $installerUrlARM64 = $matches[1]
+                Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
+            }
+        
+            if (-not $installerUrlX64 -and -not $installerUrlARM64) {
+                throw "Installer URLs not found in YAML."
+            }
+        
+            # Determine architecture and download the correct installer
+            $arch = (Get-ComputerInfo).CSDescription
+        
+            if ($arch -eq "ARM processor family") {
+                if (-not $installerUrlARM64) {
+                    throw "ARM64 installer URL not found in YAML."
+                }
+                try {
+                    Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
+                    Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+                } catch {
+                    Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
+                    throw
+                }
+        
+                # Verify the file exists
+                if (-not (Test-Path -Path $filearm64)) {
+                    throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
+                }
+        
+            } else {
+                if (-not $installerUrlX64) {
+                    throw "x64 installer URL not found in YAML."
+                }
+                try {
+                    Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
+                    Invoke-LogMessage "Downloaded x64 installer to $filex64"
+                } catch {
+                    Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
+                    throw
+                }
+        
+                # Verify the file exists
+                if (-not (Test-Path -Path $filex64)) {
+                    throw "The x64 installer file does not exist at $filex64. Download may have failed."
+                }
+            }
+        
+            # Start installation here
+            if ($arch -like "*ARM*") {
+                Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Bitwarden_Installer_arm64.exe"
+                Rename-Item -Path $local:filearm64 -NewName $renamedFile
+                Invoke-LogMessage "Renamed installer to: $renamedFile"
+                Start-Process -FilePath $renamedFile -ArgumentList "/allusers /S" -Wait -ErrorAction Stop
+                Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+                Invoke-LogMessage "Removed installer: $renamedFile"
+            } else {
+                Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Bitwarden_Installer_x64.exe"
+                Rename-Item -Path $local:filex64 -NewName $renamedFile
+                Invoke-LogMessage "Renamed installer to: $renamedFile"
+                Start-Process -FilePath $renamedFile -ArgumentList "/allusers /S" -Wait -ErrorAction Stop
+                Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+                Invoke-LogMessage "Removed installer: $renamedFile"
+            }
+            Invoke-LogMessage "Successfully installed Bitwarden."
+        } catch {
+            Invoke-LogMessage "Error installing Bitwarden: $($_.Exception.Message)"
+        }
+    }
 ############################################################################################################################################
     else {
         Invoke-LogMessage "Unknown application: $AppName"
         Write-Error "Error: Unknown application '$AppName'. Please check the application name and try again."
+    }
+}
+
+function Uninstall-TecharyGet {
+    param(
+        [string]$AppName
+    )
+
+    # Check if the application is installed
+    $installedApps = Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like "*$AppName*" }
+    
+    if ($installedApps) {
+        foreach ($app in $installedApps) {
+            Write-Host "Uninstalling $($app.Name)..."
+            $app.Uninstall() | Out-Null
+            Write-Host "$($app.Name) uninstalled successfully."
+        }
+    } else {
+        Write-Host "No applications found matching '$AppName'."
     }
 }
 

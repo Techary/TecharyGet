@@ -1,9 +1,8 @@
-$folderPath = "c:\logs\TecharyGetLogs\Installs\GoogleChrome"
-$logFile = "$folderPath\Install-GoogleChrome.log"
-$filex64 = "$folderPath\GoogleChromex64.msi"
-$filearm64 = "$folderPath\GoogleChromearm64.msi"
+$folderPath = "c:\temp\ChromeInstallation"
+$logFile = "$folderPath\Chrome-Install.log"
+$filex64 = "$folderPath\Chrome_Installer_x64.msi"
+$filearm64 = "$folderPath\Chrome_Installer-arm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
-$Download = New-Object net.webclient
 
 # Function to log messages
 function Invoke-LogMessage {
@@ -69,13 +68,12 @@ try {
     # Determine architecture and download the correct installer
     $arch = (Get-ComputerInfo).CSDescription
 
-    if ($arch -eq "ARM processor family") {
+    if ($arch -like "*ARM*") {
         if (-not $installerUrlARM64) {
             throw "ARM64 installer URL not found in YAML."
         }
         try {
-            $Download = New-Object System.Net.WebClient
-            $Download.DownloadFile($installerUrlARM64, $filearm64)
+            Invoke-WebRequest -Uri $installerUrlARM64 -OutFile $filearm64
             Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
         } catch {
             Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
@@ -87,16 +85,12 @@ try {
             throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
         }
 
-        # Install ARM64 version
-        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$filearm64`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
-        Invoke-LogMessage "Successfully installed Google Chrome (ARM64)."
     } else {
         if (-not $installerUrlX64) {
             throw "x64 installer URL not found in YAML."
         }
         try {
-            $Download = New-Object System.Net.WebClient
-            $Download.DownloadFile($installerUrlX64, $filex64)
+            Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
             Invoke-LogMessage "Downloaded x64 installer to $filex64"
         } catch {
             Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"

@@ -1,9 +1,8 @@
-$folderPath = "c:\logs\TecharyGetLogs\Installs\DisplayLink"
-$logFile = "$folderPath\DisplayLink.log"
-$filex64 = "$folderPath\DisplayLinkx64.msi"
-$filearm64 = "$folderPath\DisplayLinkarm64.msi"
+$folderPath = "c:\temp\DisplayLinkInstallation"
+$logFile = "$folderPath\DisplayLink-Install.log"
+$filex64 = "$folderPath\DisplayLink_Installer_x64.msi"
+$filearm64 = "$folderPath\DisplayLink_Installer-arm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
-$Download = New-Object net.webclient
 
 # Function to log messages
 function Invoke-LogMessage {
@@ -80,7 +79,7 @@ try {
     # Start installation here
     if ($arch -like "*ARM*") {
         Invoke-LogMessage "Downloaded x64 installer to $local:filearm64"
-        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "DisplayLink_Installer_arm64.exe"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "DisplayLink_Installer_arm64.msi"
         Rename-Item -Path $local:filearm64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
         Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
@@ -88,7 +87,7 @@ try {
         Invoke-LogMessage "Removed installer: $renamedFile"
     } else {
         Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "DisplayLink_Installer_x64.exe"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "DisplayLink_Installer_x64.msi"
         Rename-Item -Path $local:filex64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
         Start-Process -FilePath $renamedFile -ArgumentList "-silent" -Wait -NoNewWindow
