@@ -1,7 +1,7 @@
-$folderPath = "c:\temp\JabraDirectInstallation"
-$logFile = "$folderPath\jabradirect.log"
-$filex64 = "$folderPath\jabradirectx64.exe"
-$filearm64 = "$folderPath\jabradirectarm64.exe"
+$folderPath = "c:\temp\BitwardenInstallation"
+$logFile = "$folderPath\Bitwarden.log"
+$filex64 = "$folderPath\Bitwardenx64.exe"
+$filearm64 = "$folderPath\Bitwardenarm64.exe"
 $arch = get-computerinfo
 
 # Function to log messages
