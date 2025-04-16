@@ -2104,7 +2104,7 @@ param(
 if ($HelpType -eq "Install"){
     Write-Host "TecharyGet - A PowerShell module for managing Application Packages."
     Write-Host "How to install an available application"
-    Write-Host "TecharyGet -AppName <ApplicationName>"
+    Write-Host "TecharyGet install <ApplicationName>"
     write-Host "Available Applications:"
     Write-Host "1. Jabra Direct"
     Write-Host "2. Adobe Acrobat Reader"
