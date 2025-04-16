@@ -20,7 +20,7 @@ $folderPath = "c:\temp\AdobeReaderInstallation"
  Invoke-LogMessage "Latest version found: $latestVersion"
  
  # Build YAML URL with correct version string
- $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/a/Adobe/Acrobat/Reader/64-bit/$latestVersion/Adobe.CreativeCloud.installer.yaml"
+ $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/a/Adobe/CreativeCloud/$latestVersion/Adobe.CreativeCloud.installer.yaml"
  Invoke-LogMessage "Downloading YAML from: $yamlUrl"
 
  # Download YAML content
