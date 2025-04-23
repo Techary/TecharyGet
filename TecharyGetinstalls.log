@@ -1,0 +1,7 @@
+[2025-04-17 10:01:53] Created folder: c:\temp\TecharyGetInstallationLogs
+[2025-04-17 10:02:05] Latest version found: 6.5.0.348
+[2025-04-17 10:02:05] Downloading YAML from: https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/a/Adobe/CreativeCloud/6.5.0.348/Adobe.CreativeCloud.installer.yaml
+[2025-04-17 10:02:06] x64 Installer URL: https://prod-rel-ffc-ccm.oobesaas.adobe.com/adobe-ffc-external/core/v1/wam/download?sapCode=KCCC&wamFeature=nuj-live
+[2025-04-17 10:02:06] ARM64 Installer URL: https://prod-rel-ffc-ccm.oobesaas.adobe.com/adobe-ffc-external/core/v1/wam/download?sapCode=KCCC&wamFeature=nuj-live
+[2025-04-17 10:02:08] Downloaded x64 installer to c:\temp\TecharyGetInstallationLogs\CreativeCloud_x64.msi
+[2025-04-17 10:02:08] Error installing Adobe Creative Cloud: The term 'a' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
