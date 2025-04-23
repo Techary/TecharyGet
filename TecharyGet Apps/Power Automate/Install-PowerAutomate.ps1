@@ -1,7 +1,7 @@
-$folderPath = "c:\temp\PowerBIInstallation"
-$logFile = "$folderPath\PowerBI-Install.log"
-$filex64 = "$folderPath\PowerBI_Installer_x64.msi"
-$filearm64 = "$folderPath\PowerBI_Installer-arm64.msi"
+$folderPath = "c:\temp\PowerAutomateInstallation"
+$logFile = "$folderPath\PowerAutomate-Install.log"
+$filex64 = "$folderPath\PowerAutomate_Installer_x64.msi"
+$filearm64 = "$folderPath\PowerAutomate_Installer-arm64.msi"
 $arch = (Get-ComputerInfo).CSDescription
 
 # Function to log messages
@@ -20,7 +20,7 @@ if (-not (Test-Path -Path $folderPath)) {
 }
 
             # Get latest version from GitHub API
-            $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/m/Microsoft/PowerBI"
+            $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/m/Microsoft/PowerAutomateDesktop"
             $headers = @{
                 "User-Agent" = "PowerShell"
                 "Accept" = "application/vnd.github.v3+json"
@@ -35,7 +35,7 @@ if (-not (Test-Path -Path $folderPath)) {
             Invoke-LogMessage "Latest version found: $latestVersion"
         
             # Build YAML URL from Github to gather Installation URL
-            $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/m/Microsoft/PowerBI/${latestVersion}/Microsoft.PowerBI.installer.yaml"
+            $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/m/Microsoft/PowerAutomateDesktop/${latestVersion}/Microsoft.PowerAutomateDesktop.installer.yaml"
             Invoke-LogMessage "Downloading YAML from: $yamlUrl"
         
             # Download YAML content
@@ -43,8 +43,8 @@ if (-not (Test-Path -Path $folderPath)) {
             $yamlText = $yamlContent.Content
         
             # Find the InstallerUrls for x64 and arm64
-            $patternX64 = 'InstallerUrl:\s*(\S*/PBIDesktopSetup-\d{4}-\d{2}_x64\.exe)'
-            $patternARM64 = 'InstallerUrl:\s*(\S*/PBIDesktopSetup-\d{4}-\d{2}_x64\.exe)'
+            $patternX64 = 'InstallerUrl:\s*(\S*/Setup\.Microsoft\.PowerAutomate\.exe)'
+            $patternARM64 = 'InstallerUrl:\s*(\S*/Setup\.Microsoft\.PowerAutomate\.exe)'
         
             $installerUrlX64 = $null
             $installerUrlARM64 = $null
@@ -104,22 +104,22 @@ if (-not (Test-Path -Path $folderPath)) {
             # Start installation here
             if ($arch -like "*ARM*") {
                 Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
-                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "PowerBI_Installer_arm64.exe"
+                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "PowerAutomate_Installer_arm64.exe"
                 Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
-                Start-Process -FilePath $renamedFile -ArgumentList "-silent ACCEPT_EULA=1" -Wait -ErrorAction Stop
+                Start-Process -FilePath $renamedFile -ArgumentList "-Silent -ACCEPTEULA" -Wait -ErrorAction Stop
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
             } else {
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "PowerBI_Installer_x64.exe"
+                $renamedFile = Join-Path -Path $local:folderPath -ChildPath "PowerAutomate_Installer_x64.exe"
                 Rename-Item -Path $local:filex64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
-                Start-Process -FilePath $renamedFile -ArgumentList "-silent ACCEPT_EULA=1" -Wait -ErrorAction Stop
+                Start-Process -FilePath $renamedFile -ArgumentList "-Silent -ACCEPTEULA" -Wait -ErrorAction Stop
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
             }
-    Invoke-LogMessage "Successfully installed PowerBI."
+    Invoke-LogMessage "Successfully installed Power Automate."
      catch {
-    Invoke-LogMessage "Error installing PowerBI: $($_.Exception.Message)"
+    Invoke-LogMessage "Error installing Power Automate: $($_.Exception.Message)"
 }
