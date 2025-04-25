@@ -109,7 +109,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## Google Chrome Installer ######################
+############## Google Chrome Installer ######################
     if ($AppName -eq "Chrome") {
         try {
             # Get latest version from GitHub API
@@ -331,7 +331,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## Slack Installer ######################
+############## Slack Installer ######################
     elseif ($AppName -eq "Slack") {
         try {
             # Get latest version from GitHub API
@@ -442,7 +442,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## VSCode Installer ######################
+############## VSCode Installer ######################
     elseif ($AppName -eq "VSCode") {
         try {
             # Get latest version from GitHub API
@@ -553,7 +553,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## 8x8 Work Installer ######################
+############## 8x8 Work Installer ######################
     elseif ($AppName -eq "8x8Work") {
         try {
             # Get latest version from GitHub API
@@ -663,7 +663,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## DisplayLink Installer ######################
+############## DisplayLink Installer ######################
     elseif ($AppName -eq "DisplayLink") {
         try {
             $DisplayLinkFolder = "C:\temp\TecharyGetInstallationLogs\PublicSoftware - DisplayLink\DisplayLink_Win10RS.msi"
@@ -746,7 +746,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## GitHub Desktop Installer ######################
+############## GitHub Desktop Installer ######################
     elseif ($AppName -eq "GitHubDesktop") {
         try {
             # Get latest version from GitHub API
@@ -857,7 +857,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## Node.js Installer ######################
+############## Node.js Installer ######################
     elseif ($AppName -eq "Nodejs"){
         try {
             # Get latest version from GitHub API
@@ -968,7 +968,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## Jabra Direct Installer ######################
+############## Jabra Direct Installer ######################
     elseif ($AppName -eq "JabraDirect"){
         try {
             # Get latest version from GitHub API
@@ -1079,7 +1079,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## Adobe Reader Installer ######################
+############## Adobe Reader Installer ######################
     elseif($AppName -eq "AdobeReader"){
         try {
             # Get latest version from GitHub API
@@ -1192,7 +1192,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## Microsoft PowerToys Installer ######################
+############## Microsoft PowerToys Installer ######################
     elseif($AppName -eq "PowerToys"){
         try {
             # Get latest version from GitHub API
@@ -2631,42 +2631,53 @@ if ($HelpType -eq "Install"){
     Write-Host "TecharyGet - A PowerShell module for managing Application Packages."
     Write-Host "How to install an available application"
     Write-Host "TecharyGet install <ApplicationName>"
-    write-Host "Available Applications:"
-    Write-Host "1. Jabra Direct"
-    Write-Host "2. Adobe Acrobat Reader"
-    Write-Host "3. Microsoft PowerToys"
+    write-Host "Below is a list of ALL available applications, p.s. Harry don't type in the numbers to install:"
+    Write-Host "1. JabraDirect"
+    Write-Host "2. AdobeReader"
+    Write-Host "3. PowerToys"
     Write-Host "4. Zoom"
     Write-Host "5. Wireshark"
     Write-Host "6. Nable"
-    Write-Host "7. 8x8 Work"
+    Write-Host "7. 8x8Work"
     Write-Host "8. DisplayLink"
-    Write-Host "9. Google Chrome"
-    Write-Host "10. Jabra Direct"
-    Write-Host "11. Mozilla Firefox"
-    Write-Host "12. Node.js"
-    Write-Host "13. Microsoft Visual Studio Code"
-    Write-Host "14. Slack"
+    Write-Host "9. Chrome"
+    Write-Host "10. Firefox"
+    Write-Host "11. Nodejs"
+    Write-Host "12. VSCode"
+    Write-Host "13. Slack"
+    Write-Host "14. GitHubDesktop"
+    Write-Host "15. PowerBI"
+    Write-Host "16. PowerAutomate"
+    Write-Host "17. MyDPD"
+    Write-Host "18. WindowsApp"
+    Write-Host "19. Bitwarden"
+    Write-Host "20. 7zip"
 }
 elseif ($HelpType -eq "Uninstall"){
     Write-Host "TecharyGet - A PowerShell module for managing Application Packages."
     Write-Host "How to uninstall an available application"
     Write-Host "TecharyGet uninstall <ApplicationName>"
-    write-Host "Available Applications:"
-    write-Host "Available Applications:"
-    Write-Host "1. Jabra Direct"
-    Write-Host "2. Adobe Acrobat Reader"
-    Write-Host "3. Microsoft PowerToys"
+    write-Host "Below is a list of ALL available applications, p.s. Harry don't type in the numbers to uninstall:"
+    Write-Host "1. JabraDirect"
+    Write-Host "2. AdobeReader"
+    Write-Host "3. PowerToys"
     Write-Host "4. Zoom"
     Write-Host "5. Wireshark"
     Write-Host "6. Nable"
-    Write-Host "7. 8x8 Work"
+    Write-Host "7. 8x8Work"
     Write-Host "8. DisplayLink"
-    Write-Host "9. Google Chrome"
-    Write-Host "10. Jabra Direct"
-    Write-Host "11. Mozilla Firefox"
-    Write-Host "12. Node.js"
-    Write-Host "13. Microsoft Visual Studio Code"
-    Write-Host "14. Slack"
+    Write-Host "9. Chrome"
+    Write-Host "10. Firefox"
+    Write-Host "11. Nodejs"
+    Write-Host "12. VSCode"
+    Write-Host "13. Slack"
+    Write-Host "14. GitHubDesktop"
+    Write-Host "15. PowerBI"
+    Write-Host "16. PowerAutomate"
+    Write-Host "17. MyDPD"
+    Write-Host "18. WindowsApp"
+    Write-Host "19. Bitwarden"
+    Write-Host "20. 7zip"
 }
 else {
     Write-Host "Invalid HelpType. Please specify 'Install' or 'Uninstall'."
