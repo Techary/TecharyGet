@@ -2404,6 +2404,88 @@ function Install-TecharyGetPackage {
         }
     }
 ############################################################################################################################################
+############################################################################################################################################
+############################################################################################################################################
+############## MyDPD Installer ######################
+    elseif ($AppName -eq "MyDPD"){
+        try {
+    # Define base URL for the installer
+    $baseUrl = "https://apis.my.dpd.co.uk/apps/download/public"
+
+    # Download installers
+    if ($arch -eq "ARM processor family") {
+        Invoke-WebRequest -Uri $baseUrl -OutFile $filearm64
+        Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+    } else {
+        Invoke-WebRequest -Uri $baseUrl -OutFile $filex64
+        Invoke-LogMessage "Downloaded x64 installer to $filex64"
+    }
+
+    # Install 8x8 Work based on architecture
+    if ($arch -eq "ARM processor family") {
+        Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "MyDPD_Installer_arm64.exe"
+        Rename-Item -Path $local:filearm64 -NewName $renamedFile
+        Invoke-LogMessage "Renamed installer to: $renamedFile"
+        Start-Process -FilePath $renamedFile -ArgumentList "--Silent" -Wait -ErrorAction Stop
+        Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+        Invoke-LogMessage "Removed installer: $renamedFile"
+    } else {
+        Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "MyDPD_Installer_x64.exe"
+        Rename-Item -Path $local:filex64 -NewName $renamedFile
+        Invoke-LogMessage "Renamed installer to: $renamedFile"
+        Start-Process -FilePath $renamedFile -ArgumentList "--Silent" -Wait -ErrorAction Stop
+        Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+        Invoke-LogMessage "Removed installer: $renamedFile"
+    }
+    Invoke-LogMessage "Successfully installed MyDPD."
+} catch {
+    Invoke-LogMessage "Error installing MyDPD: $($_.Exception.Message)"
+}
+    }
+############################################################################################################################################
+############################################################################################################################################
+############################################################################################################################################
+############## Windows App Installer ######################
+elseif ($AppName -eq "WindowsApp"){
+    try {
+# Define base URL for the installer
+$baseUrl = "https://go.microsoft.com/fwlink/?linkid=2262633"
+
+# Download installers
+if ($arch -eq "ARM processor family") {
+    Invoke-WebRequest -Uri $baseUrl -OutFile $filearm64
+    Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+} else {
+    Invoke-WebRequest -Uri $baseUrl -OutFile $filex64
+    Invoke-LogMessage "Downloaded x64 installer to $filex64"
+}
+
+# Install 8x8 Work based on architecture
+if ($arch -eq "ARM processor family") {
+    Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+    $renamedFile = Join-Path -Path $local:folderPath -ChildPath "WindowsApp_Installer_arm64.msix"
+    Rename-Item -Path $local:filearm64 -NewName $renamedFile
+    Invoke-LogMessage "Renamed installer to: $renamedFile"
+    Add-AppxProvisionedPackage -Online -PackagePath "C:\temp\TecharyGetInstallationLogs\WindowsApp_Installer_arm64.msix" -SkipLicense
+    Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+    Invoke-LogMessage "Removed installer: $renamedFile"
+} else {
+    Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+    $renamedFile = Join-Path -Path $local:folderPath -ChildPath "WindowsApp_Installer_x64.msix"
+    Rename-Item -Path $local:filex64 -NewName $renamedFile
+    Invoke-LogMessage "Renamed installer to: $renamedFile"
+    Add-AppxProvisionedPackage -Online -PackagePath "C:\temp\TecharyGetInstallationLogs\WindowsApp_Installer_x64.msix" -SkipLicense
+    Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+    Invoke-LogMessage "Removed installer: $renamedFile"
+}
+Invoke-LogMessage "Successfully installed Windows App."
+} catch {
+Invoke-LogMessage "Error installing Windows App: $($_.Exception.Message)"
+}
+}
+############################################################################################################################################
     else {
         Invoke-LogMessage "Unknown application: $AppName"
         Write-Error "Error: Unknown application '$AppName'. Please check the application name and try again."
