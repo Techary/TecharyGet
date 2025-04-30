@@ -1861,7 +1861,12 @@ function Install-TecharyGetPackage {
                 "Accept" = "application/vnd.github.v3+json"
             }
             $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
-        
+            
+            # Define shortcut parameters
+            $startMenuPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
+            $shortcutPath = Join-Path $startMenuPath "reMarkable Companion.lnk"
+            $targetPath = "C:\Program Files\reMarkable\reMarkable.exe"  # Update this if actual path differs
+
             $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
                 try { [version]$_.name } catch { $null }
             } | Where-Object { $_ -ne $null }
@@ -1944,6 +1949,18 @@ function Install-TecharyGetPackage {
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath $renamedFile -ArgumentList "install --confirm-command --default-answer --accept-licenses" -Wait -ErrorAction Stop
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+                $Items = Get-ChildItem -Path "C:\Users\*\Desktop\*User Folder"
+                Copy-Item -Path $Items -Destination "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\New Folder" -Recurse
+                # Create shortcut
+                $wshShell = New-Object -ComObject WScript.Shell
+                $shortcut = $wshShell.CreateShortcut($shortcutPath)
+                $shortcut.TargetPath = $targetPath
+                $shortcut.WorkingDirectory = Split-Path $targetPath
+                $shortcut.WindowStyle = 1
+                $shortcut.Description = "reMarkable Companion"
+                $shortcut.IconLocation = "$targetPath, 0"
+                $shortcut.Save()
+                Invoke-LogMessage "Shortcut created in Start Menu: $shortcutPath"
                 Invoke-LogMessage "Removed installer: $renamedFile"
             } else {
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
@@ -1952,6 +1969,16 @@ function Install-TecharyGetPackage {
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath $renamedFile -ArgumentList "install --confirm-command --default-answer --accept-licenses" -Wait -ErrorAction Stop
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+                # Create shortcut
+                $wshShell = New-Object -ComObject WScript.Shell
+                $shortcut = $wshShell.CreateShortcut($shortcutPath)
+                $shortcut.TargetPath = $targetPath
+                $shortcut.WorkingDirectory = Split-Path $targetPath
+                $shortcut.WindowStyle = 1
+                $shortcut.Description = "reMarkable Companion"
+                $shortcut.IconLocation = "$targetPath, 0"
+                $shortcut.Save()
+                Invoke-LogMessage "Shortcut created in Start Menu: $shortcutPath"
                 Invoke-LogMessage "Removed installer: $renamedFile"
             }
             Invoke-LogMessage "Successfully installed reMarkable."
