@@ -1942,7 +1942,7 @@ function Install-TecharyGetPackage {
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "reMarkable_Installer_arm64.exe"
                 Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
-                Start-Process -FilePath $renamedFile -ArgumentList "in --al --da -c" -Wait -ErrorAction Stop
+                Start-Process -FilePath $renamedFile -ArgumentList "install --confirm-command --default-answer --accept-licenses" -Wait -ErrorAction Stop
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
             } else {
@@ -1950,7 +1950,7 @@ function Install-TecharyGetPackage {
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "reMarkable_Installer_x64.exe"
                 Rename-Item -Path $local:filex64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
-                Start-Process -FilePath $renamedFile -ArgumentList "in --al --da -c" -Wait -ErrorAction Stop
+                Start-Process -FilePath $renamedFile -ArgumentList "install --confirm-command --default-answer --accept-licenses" -Wait -ErrorAction Stop
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
             }
