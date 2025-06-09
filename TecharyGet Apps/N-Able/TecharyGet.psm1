@@ -109,7 +109,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Google Chrome Installer ######################
+    ############## Google Chrome Installer ######################
     if ($AppName -eq "Chrome") {
         try {
             # Get latest version from GitHub API
@@ -331,7 +331,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Slack Installer ######################
+    ############## Slack Installer ######################
     elseif ($AppName -eq "Slack") {
         try {
             # Get latest version from GitHub API
@@ -442,7 +442,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## VSCode Installer ######################
+    ############## VSCode Installer ######################
     elseif ($AppName -eq "VSCode") {
         try {
             # Get latest version from GitHub API
@@ -553,7 +553,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## 8x8 Work Installer ######################
+    ############## 8x8 Work Installer ######################
     elseif ($AppName -eq "8x8Work") {
         try {
             # Get latest version from GitHub API
@@ -663,7 +663,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## DisplayLink Installer ######################
+    ############## DisplayLink Installer ######################
     elseif ($AppName -eq "DisplayLink") {
         try {
             $DisplayLinkFolder = "C:\temp\TecharyGetInstallationLogs\PublicSoftware - DisplayLink\DisplayLink_Win10RS.msi"
@@ -746,7 +746,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## GitHub Desktop Installer ######################
+    ############## GitHub Desktop Installer ######################
     elseif ($AppName -eq "GitHubDesktop") {
         try {
             # Get latest version from GitHub API
@@ -857,7 +857,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Node.js Installer ######################
+    ############## Node.js Installer ######################
     elseif ($AppName -eq "Nodejs"){
         try {
             # Get latest version from GitHub API
@@ -968,7 +968,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Jabra Direct Installer ######################
+    ############## Jabra Direct Installer ######################
     elseif ($AppName -eq "JabraDirect"){
         try {
             # Get latest version from GitHub API
@@ -1079,7 +1079,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Adobe Reader Installer ######################
+    ############## Adobe Reader Installer ######################
     elseif($AppName -eq "AdobeReader"){
         try {
             # Get latest version from GitHub API
@@ -1192,7 +1192,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Microsoft PowerToys Installer ######################
+    ############## Microsoft PowerToys Installer ######################
     elseif($AppName -eq "PowerToys"){
         try {
             # Get latest version from GitHub API
@@ -1303,7 +1303,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Zoom Installer ######################
+    ############## Zoom Installer ######################
     elseif($appname -eq "Zoom"){
         try {
             # Get latest version from GitHub API
@@ -1519,7 +1519,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Techary Nable Installer ######################
+    ############## Techary Nable Installer ######################
     elseif($AppName -eq "Nable"){
         if (-not (Test-Path "C:\temp")) 
             {New-Item -ItemType Directory -Path "C:\temp"
@@ -1632,7 +1632,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Bitwarden Installer ######################
+    ############## Bitwarden Installer ######################
     elseif($AppName -eq "Bitwarden"){
         try {
             # Get latest version from GitHub API
@@ -1743,115 +1743,115 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Logi Options + Installer ######################
+    ############## Logi Options + Installer ######################
     elseif($AppName -eq "LogiOptions"){
         Try {
-             # Get latest version from GitHub API
-        $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/l/Logitech/OptionsPlus"
-        $headers = @{
-            "User-Agent" = "PowerShell"
-            "Accept" = "application/vnd.github.v3+json"
+            # Get latest version from GitHub API
+    $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/l/Logitech/OptionsPlus"
+    $headers = @{
+        "User-Agent" = "PowerShell"
+        "Accept" = "application/vnd.github.v3+json"
+    }
+    $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
+
+    $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
+        try { [version]$_.name } catch { $null }
+    } | Where-Object { $_ -ne $null }
+
+    $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
+    Invoke-LogMessage "Latest version found: $latestVersion"
+
+    # Build YAML URL from Github to gather Installation URL
+    $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/l/Logitech/OptionsPlus/${latestVersion}/Logitech.OptionsPlus.installer.yaml"
+    Invoke-LogMessage "Downloading YAML from: $yamlUrl"
+
+    # Download YAML content
+    $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
+    $yamlText = $yamlContent.Content
+
+    # Find the InstallerUrls for x64 and arm64
+    $patternX64 = 'InstallerUrl:\s*(\S*/logioptionsplus_installer\.exe)'
+    $patternARM64 = 'InstallerUrl:\s*(\S*/logioptionsplus_installer\.exe)'
+
+    $installerUrlX64 = $null
+    $installerUrlARM64 = $null
+
+    if ($yamlText -match $patternX64) {
+        $installerUrlX64 = $matches[1]
+        Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
+    }
+
+    if ($yamlText -match $patternARM64) {
+        $installerUrlARM64 = $matches[1]
+        Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
+    }
+
+    if (-not $installerUrlX64 -and -not $installerUrlARM64) {
+        throw "Installer URLs not found in YAML."
+    }
+
+    if ($arch -eq "ARM processor family") {
+        if (-not $installerUrlARM64) {
+            throw "ARM64 installer URL not found in YAML."
         }
-        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
-
-        $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
-            try { [version]$_.name } catch { $null }
-        } | Where-Object { $_ -ne $null }
-
-        $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
-        Invoke-LogMessage "Latest version found: $latestVersion"
-
-        # Build YAML URL from Github to gather Installation URL
-        $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/l/Logitech/OptionsPlus/${latestVersion}/Logitech.OptionsPlus.installer.yaml"
-        Invoke-LogMessage "Downloading YAML from: $yamlUrl"
-
-        # Download YAML content
-        $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
-        $yamlText = $yamlContent.Content
-
-        # Find the InstallerUrls for x64 and arm64
-        $patternX64 = 'InstallerUrl:\s*(\S*/logioptionsplus_installer\.exe)'
-        $patternARM64 = 'InstallerUrl:\s*(\S*/logioptionsplus_installer\.exe)'
-
-        $installerUrlX64 = $null
-        $installerUrlARM64 = $null
-
-        if ($yamlText -match $patternX64) {
-            $installerUrlX64 = $matches[1]
-            Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
-        }
-
-        if ($yamlText -match $patternARM64) {
-            $installerUrlARM64 = $matches[1]
-            Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
-        }
-
-        if (-not $installerUrlX64 -and -not $installerUrlARM64) {
-            throw "Installer URLs not found in YAML."
-        }
-
-        if ($arch -eq "ARM processor family") {
-            if (-not $installerUrlARM64) {
-                throw "ARM64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
-                Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
-            } catch {
-                Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filearm64)) {
-                throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
-            }
-
-        } else {
-            if (-not $installerUrlX64) {
-                throw "x64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
-                Invoke-LogMessage "Downloaded x64 installer to $filex64"
-            } catch {
-                Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filex64)) {
-                throw "The x64 installer file does not exist at $filex64. Download may have failed."
-            }
-        }
-
-        # Start installation here
-        if ($arch -like "*ARM*") {
-            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "LogiOptions_Installer_arm64.exe"
-            Rename-Item -Path $local:filearm64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath $renamedFile -ArgumentList "/quiet /analytics no" -Wait -ErrorAction Stop
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        } else {
-            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "LogiOptions_Installer_x64.exe"
-            Rename-Item -Path $local:filex64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath $renamedFile -ArgumentList "/quiet /analytics no" -Wait -ErrorAction Stop
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        }
-        Invoke-LogMessage "Successfully installed Logi Option."
+        try {
+            Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
+            Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
         } catch {
-            Invoke-LogMessage "Error installing Logi Options: $($_.Exception.Message)"
+            Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
+            throw
         }
+
+        # Verify the file exists
+        if (-not (Test-Path -Path $filearm64)) {
+            throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
+        }
+
+    } else {
+        if (-not $installerUrlX64) {
+            throw "x64 installer URL not found in YAML."
+        }
+        try {
+            Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
+            Invoke-LogMessage "Downloaded x64 installer to $filex64"
+        } catch {
+            Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
+            throw
+        }
+
+        # Verify the file exists
+        if (-not (Test-Path -Path $filex64)) {
+            throw "The x64 installer file does not exist at $filex64. Download may have failed."
+        }
+    }
+
+    # Start installation here
+    if ($arch -like "*ARM*") {
+        Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "LogiOptions_Installer_arm64.exe"
+        Rename-Item -Path $local:filearm64 -NewName $renamedFile
+        Invoke-LogMessage "Renamed installer to: $renamedFile"
+        Start-Process -FilePath $renamedFile -ArgumentList "/quiet /analytics no" -Wait -ErrorAction Stop
+        Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+        Invoke-LogMessage "Removed installer: $renamedFile"
+    } else {
+        Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "LogiOptions_Installer_x64.exe"
+        Rename-Item -Path $local:filex64 -NewName $renamedFile
+        Invoke-LogMessage "Renamed installer to: $renamedFile"
+        Start-Process -FilePath $renamedFile -ArgumentList "/quiet /analytics no" -Wait -ErrorAction Stop
+        Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+        Invoke-LogMessage "Removed installer: $renamedFile"
+    }
+    Invoke-LogMessage "Successfully installed Logi Option."
+} catch {
+    Invoke-LogMessage "Error installing Logi Options: $($_.Exception.Message)"
+}
     }
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## reMarkable Companion App Installer ######################
+    ############## reMarkable Companion App Installer ######################
     elseif ($AppName -eq "reMarkable"){
         try {
             # Get latest version from GitHub API
@@ -1861,12 +1861,7 @@ function Install-TecharyGetPackage {
                 "Accept" = "application/vnd.github.v3+json"
             }
             $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
-            
-            # Define shortcut parameters
-            $startMenuPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
-            $shortcutPath = Join-Path $startMenuPath "reMarkable Companion.lnk"
-            $targetPath = "C:\Program Files\reMarkable\reMarkable.exe"  # Update this if actual path differs
-
+        
             $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
                 try { [version]$_.name } catch { $null }
             } | Where-Object { $_ -ne $null }
@@ -1947,38 +1942,16 @@ function Install-TecharyGetPackage {
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "reMarkable_Installer_arm64.exe"
                 Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
-                Start-Process -FilePath $renamedFile -ArgumentList "install --confirm-command --default-answer --accept-licenses" -Wait -ErrorAction Stop
+                Start-Process -FilePath $renamedFile -ArgumentList "in --al --da -c" -Wait -ErrorAction Stop
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-                $Items = Get-ChildItem -Path "C:\Users\*\Desktop\*User Folder"
-                Copy-Item -Path $Items -Destination "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\New Folder" -Recurse
-                # Create shortcut
-                $wshShell = New-Object -ComObject WScript.Shell
-                $shortcut = $wshShell.CreateShortcut($shortcutPath)
-                $shortcut.TargetPath = $targetPath
-                $shortcut.WorkingDirectory = Split-Path $targetPath
-                $shortcut.WindowStyle = 1
-                $shortcut.Description = "reMarkable Companion"
-                $shortcut.IconLocation = "$targetPath, 0"
-                $shortcut.Save()
-                Invoke-LogMessage "Shortcut created in Start Menu: $shortcutPath"
                 Invoke-LogMessage "Removed installer: $renamedFile"
             } else {
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "reMarkable_Installer_x64.exe"
                 Rename-Item -Path $local:filex64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
-                Start-Process -FilePath $renamedFile -ArgumentList "install --confirm-command --default-answer --accept-licenses" -Wait -ErrorAction Stop
+                Start-Process -FilePath $renamedFile -ArgumentList "in --al --da -c" -Wait -ErrorAction Stop
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-                # Create shortcut
-                $wshShell = New-Object -ComObject WScript.Shell
-                $shortcut = $wshShell.CreateShortcut($shortcutPath)
-                $shortcut.TargetPath = $targetPath
-                $shortcut.WorkingDirectory = Split-Path $targetPath
-                $shortcut.WindowStyle = 1
-                $shortcut.Description = "reMarkable Companion"
-                $shortcut.IconLocation = "$targetPath, 0"
-                $shortcut.Save()
-                Invoke-LogMessage "Shortcut created in Start Menu: $shortcutPath"
                 Invoke-LogMessage "Removed installer: $renamedFile"
             }
             Invoke-LogMessage "Successfully installed reMarkable."
@@ -1989,7 +1962,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Notion Installer ######################
+    ############## Notion Installer ######################
     elseif ($AppName -eq "Notion"){
         try {
             # Get latest version from GitHub API
@@ -2100,7 +2073,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## PowerBI Installer ######################
+    ############## PowerBI Installer ######################
     elseif ($AppName -eq "PowerBI"){
         try {
             # Get latest version from GitHub API
@@ -2211,7 +2184,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## 7Zip Installer ######################
+    ############## 7Zip Installer ######################
     elseif ($AppName -eq "7Zip"){
         try {
             # Get latest version from GitHub API
@@ -2222,9 +2195,9 @@ function Install-TecharyGetPackage {
             }
             $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
         
-            ##         $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
-            ##              try { [version]$_.name } catch { $null }
-            ##          } | Where-Object { $_ -ne $null }
+##         $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
+##              try { [version]$_.name } catch { $null }
+##          } | Where-Object { $_ -ne $null }
         
             $latestVersion = ($response | Where-Object { $_.type -eq "dir" } | Sort-Object name -Descending | Select-Object -First 2 | Select-Object -Last 1).name
             Invoke-LogMessage "Latest version found: $latestVersion"
@@ -2322,7 +2295,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Power Automate Installer ######################
+    ############## Power Automate Installer ######################
     elseif ($AppName -eq "PowerAutomate"){
         try {
             # Get latest version from GitHub API
@@ -2436,49 +2409,8 @@ function Install-TecharyGetPackage {
 ############## MyDPD Installer ######################
     elseif ($AppName -eq "MyDPD"){
         try {
-        # Define base URL for the installer
-        $baseUrl = "https://apis.my.dpd.co.uk/apps/download/public"
-
-        # Download installers
-        if ($arch -eq "ARM processor family") {
-            Invoke-WebRequest -Uri $baseUrl -OutFile $filearm64
-            Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
-        } else {
-            Invoke-WebRequest -Uri $baseUrl -OutFile $filex64
-            Invoke-LogMessage "Downloaded x64 installer to $filex64"
-        }
-
-        # Install 8x8 Work based on architecture
-        if ($arch -eq "ARM processor family") {
-            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "MyDPD_Installer_arm64.exe"
-            Rename-Item -Path $local:filearm64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath $renamedFile -ArgumentList "--Silent" -Wait -ErrorAction Stop
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        } else {
-            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "MyDPD_Installer_x64.exe"
-            Rename-Item -Path $local:filex64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath $renamedFile -ArgumentList "--Silent" -Wait -ErrorAction Stop
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        }
-        Invoke-LogMessage "Successfully installed MyDPD."
-        } catch {
-            Invoke-LogMessage "Error installing MyDPD: $($_.Exception.Message)"
-        }
-    }
-############################################################################################################################################
-############################################################################################################################################
-############################################################################################################################################
-############## Windows App Installer ######################
-elseif ($AppName -eq "WindowsApp"){
-    try {
     # Define base URL for the installer
-    $baseUrl = "https://go.microsoft.com/fwlink/?linkid=2262633"
+    $baseUrl = "https://apis.my.dpd.co.uk/apps/download/public"
 
     # Download installers
     if ($arch -eq "ARM processor family") {
@@ -2492,30 +2424,71 @@ elseif ($AppName -eq "WindowsApp"){
     # Install 8x8 Work based on architecture
     if ($arch -eq "ARM processor family") {
         Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
-        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "WindowsApp_Installer_arm64.msix"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "MyDPD_Installer_arm64.exe"
         Rename-Item -Path $local:filearm64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
-        Add-AppxProvisionedPackage -Online -PackagePath "C:\temp\TecharyGetInstallationLogs\WindowsApp_Installer_arm64.msix" -SkipLicense
+        Start-Process -FilePath $renamedFile -ArgumentList "--Silent" -Wait -ErrorAction Stop
         Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
         Invoke-LogMessage "Removed installer: $renamedFile"
     } else {
         Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "WindowsApp_Installer_x64.msix"
+        $renamedFile = Join-Path -Path $local:folderPath -ChildPath "MyDPD_Installer_x64.exe"
         Rename-Item -Path $local:filex64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
-        Add-AppxProvisionedPackage -Online -PackagePath "C:\temp\TecharyGetInstallationLogs\WindowsApp_Installer_x64.msix" -SkipLicense
+        Start-Process -FilePath $renamedFile -ArgumentList "--Silent" -Wait -ErrorAction Stop
         Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
         Invoke-LogMessage "Removed installer: $renamedFile"
     }
-    Invoke-LogMessage "Successfully installed Windows App."
-    } catch {
-    Invoke-LogMessage "Error installing Windows App: $($_.Exception.Message)"
+    Invoke-LogMessage "Successfully installed MyDPD."
+} catch {
+    Invoke-LogMessage "Error installing MyDPD: $($_.Exception.Message)"
+}
     }
+############################################################################################################################################
+############################################################################################################################################
+############################################################################################################################################
+############## Windows App Installer ######################
+elseif ($AppName -eq "WindowsApp"){
+    try {
+# Define base URL for the installer
+$baseUrl = "https://go.microsoft.com/fwlink/?linkid=2262633"
+
+# Download installers
+if ($arch -eq "ARM processor family") {
+    Invoke-WebRequest -Uri $baseUrl -OutFile $filearm64
+    Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+} else {
+    Invoke-WebRequest -Uri $baseUrl -OutFile $filex64
+    Invoke-LogMessage "Downloaded x64 installer to $filex64"
+}
+
+# Install 8x8 Work based on architecture
+if ($arch -eq "ARM processor family") {
+    Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+    $renamedFile = Join-Path -Path $local:folderPath -ChildPath "WindowsApp_Installer_arm64.msix"
+    Rename-Item -Path $local:filearm64 -NewName $renamedFile
+    Invoke-LogMessage "Renamed installer to: $renamedFile"
+    Add-AppxProvisionedPackage -Online -PackagePath "C:\temp\TecharyGetInstallationLogs\WindowsApp_Installer_arm64.msix" -SkipLicense
+    Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+    Invoke-LogMessage "Removed installer: $renamedFile"
+} else {
+    Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+    $renamedFile = Join-Path -Path $local:folderPath -ChildPath "WindowsApp_Installer_x64.msix"
+    Rename-Item -Path $local:filex64 -NewName $renamedFile
+    Invoke-LogMessage "Renamed installer to: $renamedFile"
+    Add-AppxProvisionedPackage -Online -PackagePath "C:\temp\TecharyGetInstallationLogs\WindowsApp_Installer_x64.msix" -SkipLicense
+    Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+    Invoke-LogMessage "Removed installer: $renamedFile"
+}
+Invoke-LogMessage "Successfully installed Windows App."
+} catch {
+Invoke-LogMessage "Error installing Windows App: $($_.Exception.Message)"
+}
 }
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## Dell Command Installer ######################
+    ############## Dell Command Installer ######################
     elseif ($AppName -eq "DellCommand"){
         try {
             # Get latest version from GitHub API
@@ -2570,11 +2543,7 @@ elseif ($AppName -eq "WindowsApp"){
                     throw "ARM64 installer URL not found in YAML."
                 }
                 try {
-                    $Dellheaders = @{
-                        "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-                        "Referer" = "https://www.dell.com/"
-                    }
-                    Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64 -Headers $Dellheaders
+                    Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
                     Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
                 } catch {
                     Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
@@ -2591,11 +2560,7 @@ elseif ($AppName -eq "WindowsApp"){
                     throw "x64 installer URL not found in YAML."
                 }
                 try {
-                    $Dellheaders = @{
-                        "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-                        "Referer" = "https://www.dell.com/"
-                    }
-                    Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64 -Headers $Dellheaders
+                    Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
                     Invoke-LogMessage "Downloaded x64 installer to $filex64"
                 } catch {
                     Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
@@ -2632,650 +2597,12 @@ elseif ($AppName -eq "WindowsApp"){
         }
     }
 ############################################################################################################################################
-############################################################################################################################################
-############################################################################################################################################
-############## PowerShell 7 Installer ######################
-    elseif($AppName -eq "Powershell7"){
-        Try {
-            # Get latest version from GitHub API
-        $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/m/Microsoft/PowerShell"
-        $headers = @{
-            "User-Agent" = "PowerShell"
-            "Accept" = "application/vnd.github.v3+json"
-        }
-        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
-
-        $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
-            try { [version]$_.name } catch { $null }
-        } | Where-Object { $_ -ne $null }
-
-        $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
-        Invoke-LogMessage "Latest version found: $latestVersion"
-
-        # Build YAML URL from Github to gather Installation URL
-        $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/m/Microsoft/PowerShell/${latestVersion}/Microsoft.PowerShell.installer.yaml"
-        Invoke-LogMessage "Downloading YAML from: $yamlUrl"
-
-        # Download YAML content
-        $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
-        $yamlText = $yamlContent.Content
-
-        # Find the InstallerUrls for x64 and arm64
-        $patternX64 = 'InstallerUrl:\s*(\S*/PowerShell-\d+\.\d+\.\d+-win-x64\.msi)'
-        $patternARM64 = 'InstallerUrl:\s*(\S*/PowerShell-\d+\.\d+\.\d+-win-arm64\.msi)'
-
-        $installerUrlX64 = $null
-        $installerUrlARM64 = $null
-
-        if ($yamlText -match $patternX64) {
-            $installerUrlX64 = $matches[1]
-            Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
-        }
-
-        if ($yamlText -match $patternARM64) {
-            $installerUrlARM64 = $matches[1]
-            Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
-        }
-
-        if (-not $installerUrlX64 -and -not $installerUrlARM64) {
-            throw "Installer URLs not found in YAML."
-        }
-
-        if ($arch -eq "ARM processor family") {
-            if (-not $installerUrlARM64) {
-                throw "ARM64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
-                Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
-            } catch {
-                Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filearm64)) {
-                throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
-            }
-
-        } else {
-            if (-not $installerUrlX64) {
-                throw "x64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
-                Invoke-LogMessage "Downloaded x64 installer to $filex64"
-            } catch {
-                Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filex64)) {
-                throw "The x64 installer file does not exist at $filex64. Download may have failed."
-            }
-        }
-
-        # Start installation here
-        if ($arch -like "*ARM*") {
-            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "PowerShell_Installer_arm64.msi"
-            Rename-Item -Path $local:filearm64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        } else {
-            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "PowerShell_Installer_x64.msi"
-            Rename-Item -Path $local:filex64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        }
-        Invoke-LogMessage "Successfully installed PowerShell 7."
-        } catch {
-            Invoke-LogMessage "Error installing PowerShell 7: $($_.Exception.Message)"
-        }
-    }
-############################################################################################################################################
-############################################################################################################################################
-############################################################################################################################################
-############## Microsoft Office 2024 Installer ######################
-    elseif($AppName -eq "Office24"){
-        Try {
-                # Get latest version from GitHub API
-        $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/m/Microsoft/Office"
-        $headers = @{
-            "User-Agent" = "PowerShell"
-            "Accept" = "application/vnd.github.v3+json"
-        }
-        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
-
-        $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
-            try { [version]$_.name } catch { $null }
-        } | Where-Object { $_ -ne $null }
-
-        $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
-        Invoke-LogMessage "Latest version found: $latestVersion"    
-
-        # Build YAML URL from Github to gather Installation URL
-        $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/m/Microsoft/Office/${latestVersion}/Microsoft.Office.installer.yaml"
-        Invoke-LogMessage "Downloading YAML from: $yamlUrl"
-
-        # Download YAML content
-        $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
-        $yamlText = $yamlContent.Content
-
-        # Find the InstallerUrls for x64 and arm64
-        $patternX64 = 'InstallerUrl:\s*(\S*/setup\.exe)'
-        $patternARM64 = 'InstallerUrl:\s*(\S*/setup\.exe)'
-
-        $installerUrlX64 = $null
-        $installerUrlARM64 = $null
-
-        if ($yamlText -match $patternX64) {
-            $installerUrlX64 = $matches[1]
-            Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
-        }
-
-        if ($yamlText -match $patternARM64) {
-            $installerUrlARM64 = $matches[1]
-            Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
-        }
-
-        if (-not $installerUrlX64 -and -not $installerUrlARM64) {
-            throw "Installer URLs not found in YAML."
-        }
-
-        if ($arch -eq "ARM processor family") {
-            if (-not $installerUrlARM64) {
-                throw "ARM64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
-                Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
-            } catch {
-                Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filearm64)) {
-                throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
-            }
-
-        } else {
-            if (-not $installerUrlX64) {
-                throw "x64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
-                Invoke-LogMessage "Downloaded x64 installer to $filex64"
-            } catch {
-                Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filex64)) {
-                throw "The x64 installer file does not exist at $filex64. Download may have failed."
-            }
-        }
-
-        # Start installation here
-        if ($arch -like "*ARM*") {
-            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Office24_Installer_arm64.exe"
-            Rename-Item -Path $local:filearm64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath $renamedFile -ArgumentList "/configure https://aka.ms/fhlwingetconfig" -Wait -ErrorAction Stop
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        } else {
-            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Offic24_Installer_x64.exe"
-            Rename-Item -Path $local:filex64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath $renamedFile -ArgumentList "/configure https://aka.ms/fhlwingetconfig" -Wait -ErrorAction Stop
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        }
-        Invoke-LogMessage "Successfully installed PowerShell 7."
-        } catch {
-            Invoke-LogMessage "Error installing PowerShell 7: $($_.Exception.Message)"
-        }
-    }
-############################################################################################################################################
-############################################################################################################################################
-############################################################################################################################################
-############## PuTTy Installer ######################
-    elseif($AppName -eq "PuTTy"){
-        Try {
-            # Get latest version from GitHub API
-        $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/p/PuTTY/PuTTY"
-        $headers = @{
-            "User-Agent" = "PowerShell"
-            "Accept" = "application/vnd.github.v3+json"
-        }
-        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
-
-        $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
-            try { [version]$_.name } catch { $null }
-        } | Where-Object { $_ -ne $null }
-
-        $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
-        Invoke-LogMessage "Latest version found: $latestVersion"    
-
-        # Build YAML URL from Github to gather Installation URL
-        $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/p/PuTTY/PuTTY/${latestVersion}/PuTTY.PuTTY.installer.yaml"
-        Invoke-LogMessage "Downloading YAML from: $yamlUrl"
-
-        # Download YAML content
-        $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
-        $yamlText = $yamlContent.Content
-
-        # Find the InstallerUrls for x64 and arm64
-        $patternX64 = 'InstallerUrl:\s*(\S*/putty-64bit-\d+\.\d+-installer\.msi)'
-        $patternARM64 = 'InstallerUrl:\s*(\S*/putty-arm64-\d+\.\d+-installer\.msi)'
-
-        $installerUrlX64 = $null
-        $installerUrlARM64 = $null
-
-        if ($yamlText -match $patternX64) {
-            $installerUrlX64 = $matches[1]
-            Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
-        }
-
-        if ($yamlText -match $patternARM64) {
-            $installerUrlARM64 = $matches[1]
-            Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
-        }
-
-        if (-not $installerUrlX64 -and -not $installerUrlARM64) {
-            throw "Installer URLs not found in YAML."
-        }
-
-        if ($arch -eq "ARM processor family") {
-            if (-not $installerUrlARM64) {
-                throw "ARM64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
-                Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
-            } catch {
-                Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filearm64)) {
-                throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
-            }
-
-        } else {
-            if (-not $installerUrlX64) {
-                throw "x64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
-                Invoke-LogMessage "Downloaded x64 installer to $filex64"
-            } catch {
-                Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filex64)) {
-                throw "The x64 installer file does not exist at $filex64. Download may have failed."
-            }
-        }
-
-        # Start installation here
-        if ($arch -like "*ARM*") {
-            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "PuTTy_Installer_arm64.exe"
-            Rename-Item -Path $local:filearm64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        } else {
-            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "PuTTy_Installer_x64.exe"
-            Rename-Item -Path $local:filex64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        }
-        Invoke-LogMessage "Successfully installed PuTTy."
-        } catch {
-            Invoke-LogMessage "Error installing PuTTy: $($_.Exception.Message)"
-        }
-    }
-############################################################################################################################################
-############################################################################################################################################
-############################################################################################################################################
-############## Nvidia App Installer ######################
-    elseif($AppName -eq "NvidiaApp"){
-        param (
-    [switch]$Verbose,
-    [switch]$DryRun,
-    [switch]$Force,
-    [string]$Edition = "Public"
-)
-
-function Get-NvidiaDownloadLink {
-    param (
-        [string]$url = "https://www.nvidia.com/en-us/software/nvidia-app/"
-    )
-    Write-Verbose "Scraping URL: $url"
-    $response = Invoke-WebRequest -Uri $url
-    $downloadLink = $null
-
-    if ($response.Content -match 'https:\/\/us\.download\.nvidia\.com\/nvapp\/client\/[\d\.]+\/NVIDIA_app_v[\d\.]+\.exe') {
-        $downloadLink = $matches[0]
-    }
-    elseif ($response.Content -match '<a[^>]*href="([^"]*nv[^"]*app[^"]*\.exe)"[^>]*>\s*<span[^>]*>Download Now<\/span>') {
-        $downloadLink = $matches[1]
-    }
-    elseif ($response.Content -match 'href="([^"]*nv[^"]*app[^"]*\.exe)"') {
-        $downloadLink = $matches[1]
-    }
-
-    return $downloadLink
-}
-
-function Get-RemoteFileSize {
-    param (
-        [string]$url
-    )
-    Write-Verbose "Getting remote file size for URL: $url"
-    $response = Invoke-WebRequest -Uri $url -Method Head
-    $remoteFileSize = $response.Headers['Content-Length']
-    if ($remoteFileSize) {
-        if ($remoteFileSize -is [array]) {
-            $remoteFileSize = $remoteFileSize[0]
-        }
-        return [int64]$remoteFileSize
-    } else {
-        Write-Warning "Could not determine the remote file size."
-        return 0
-    }
-}
-
-function Save-File {
-    param (
-        [string]$url,
-        [string]$path
-    )
-    Write-Verbose "Downloading file from URL: $url to path: $path"
-    Invoke-WebRequest -Uri $url -OutFile $path
-}
-
-function Install-Application {
-    param (
-        [string]$installerPath,
-        [string]$installParams
-    )
-    Write-Verbose "Installing NVIDIA App from path: $installerPath with parameters: $installParams"
-    Start-Process -FilePath $installerPath -ArgumentList $installParams -Wait
-}
-
-function Test-NvidiaGPU {
-    Write-Verbose "Checking for NVIDIA GPU presence"
-    $gpu = Get-WmiObject Win32_VideoController | Where-Object { $_.Name -like "*NVIDIA*" -or $_.VideoProcessor -like "*NVIDIA*" }
-
-    if ($gpu) {
-        if ($gpu.Name) {
-            Write-Verbose "NVIDIA GPU recognized: Name = $($gpu.Name)"
-            return $gpu.Name
-        }
-        elseif ($gpu.VideoProcessor) {
-            Write-Verbose "NVIDIA GPU recognized: VideoProcessor = $($gpu.VideoProcessor)"
-            return $gpu.VideoProcessor
-        }
-    }
-    else {
-        return $null
-    }
-}
-
-function Get-InstalledNvidiaAppVersion {
-    $appPath = Join-Path -Path ${env:ProgramFiles} -ChildPath "NVIDIA Corporation\NVIDIA app\CEF\NVIDIA app.exe"
-    if (Test-Path $appPath) {
-        $fileVersionInfo = Get-Item $appPath | Select-Object -ExpandProperty VersionInfo
-        return $fileVersionInfo.ProductVersion
-    }
-    else {
-        return $null
-    }
-}
-
-function Install-NvidiaApp {
-    param (
-        [switch]$Verbose,
-        [switch]$DryRun,
-        [switch]$Force,
-        [string]$Edition = "Public"
-    )
-
-    Write-Verbose "Script parameters:"
-    Write-Verbose "Verbose: $Verbose"
-    Write-Verbose "DryRun: $DryRun"
-    Write-Verbose "Force: $Force"
-    Write-Verbose "Edition: $Edition"
-
-    $gpuModel = Test-NvidiaGPU
-    if (-not $gpuModel) {
-        if ($Force) {
-            $gpuModel = "unknown"
-            Write-Warning "No NVIDIA GPU found but `"`$Force`" parameter is declared, setting `$gpuModel = `"$gpuModel`".`nThe NVIDIA installer might do nothing because installer also will make automatic check for Nvidia GPU."
-        } else {
-            Write-Error "No NVIDIA GPU found. Exiting."
-            throw "No NVIDIA GPU found."
-        }
-    }
-
-    $url = if ($Edition -eq "Enterprise") {
-        "https://www.nvidia.com/en-us/software/nvidia-app-enterprise/"
-    } else {
-        "https://www.nvidia.com/en-us/software/nvidia-app/"
-    }
-
-    $downloadLink = Get-NvidiaDownloadLink -url $url
-    $installParams = "-s -noreboot -noeula -nofinish -nosplash"
-
-    if ($downloadLink) {
-        Write-Verbose "Download link found: $downloadLink"
-        $fileName = [System.IO.Path]::GetFileName($downloadLink)
-        if ($downloadLink -match '_v(\d+\.\d+\.\d+\.\d+)\.exe') {
-            $version = $matches[1]
-        }
-        else {
-            $version = "Unknown"
-        }
-        Write-Verbose "Extracted version: $version"
-        $installerPath = Join-Path -Path $env:Temp -ChildPath $fileName
-        $remoteFileSize = Get-RemoteFileSize -url $downloadLink
-        $remoteFileSizeMiB = [math]::Round($remoteFileSize / 1MB, 2)
-        Write-Verbose "Remote file size: $remoteFileSize bytes ($remoteFileSizeMiB MiB)"
-
-        $installedVersion = Get-InstalledNvidiaAppVersion
-
-        $output = [PSCustomObject]@{
-            GPUModel       = $gpuModel
-            URL            = $downloadLink
-            Filename       = $fileName
-            SizeOfPackage  = "$remoteFileSize bytes ($remoteFileSizeMiB MiB)"
-            Version        = $version
-            InstallCommand = "Start-Process -FilePath `"$installerPath`" -ArgumentList `"$installParams`" -Wait"
-        }
-
-        if ($DryRun) {
-            Write-Output "Dry run mode: Skipping download and installation."
-            return $output
-        }
-
-        if ($installedVersion -and $installedVersion -eq $version -and -not $Force) {
-            Write-Output "NVIDIA App version: ${installedVersion} is already installed. Skipping installation."
-            return
-        }
-
-        if (-not $DryRun) {
-            if (Test-Path $installerPath) {
-                $localFileSize = (Get-Item $installerPath).Length
-                if ($localFileSize -eq $remoteFileSize) {
-                    Write-Verbose "File already exists and has the same size. Skipping download."
-                }
-                else {
-                    Write-Verbose "File exists but sizes do not match. Downloading again."
-                    Save-File -url $downloadLink -path $installerPath
-                }
-            }
-            else {
-                Save-File -url $downloadLink -path $installerPath
-            }
-
-            Install-Application -installerPath $installerPath -installParams $installParams
-
-            $installedVersion = Get-InstalledNvidiaAppVersion
-            if ($installedVersion) {
-                Write-Output "NVIDIA App version: ${installedVersion} was installed successfully."
-            } else {
-                Write-Warning "NVIDIA App does not exist after installation."
-            }
-        }
-    }
-    else {
-        Write-Warning "Download link not found. The NVIDIA installer might do nothing."
-    }
-}
-
-# Enable verbose logging if the -Verbose switch is provided
-if ($Verbose) {
-    $VerbosePreference = "Continue"
-}
-
-Install-NvidiaApp -Verbose:$Verbose -DryRun:$DryRun -Force:$Force -Edition $Edition
-
-############################################################################################################################################
     else {
         Invoke-LogMessage "Unknown application: $AppName"
         Write-Error "Error: Unknown application '$AppName'. Please check the application name and try again."
     }
-    }
-############################################################################################################################################
-############################################################################################################################################
-############################################################################################################################################
-############## PDF24 Installer ######################
-    elseif($AppName -eq "PDF24"){
-        Try {
-            # Get latest version from GitHub API
-        $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/g/geeksoftwareGmbH/PDF24Creator"
-        $headers = @{
-            "User-Agent" = "PowerShell"
-            "Accept" = "application/vnd.github.v3+json"
-        }
-        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
+}
 
-        $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
-            try { [version]$_.name } catch { $null }
-        } | Where-Object { $_ -ne $null }
-
-        $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
-        Invoke-LogMessage "Latest version found: $latestVersion"    
-
-        # Build YAML URL from Github to gather Installation URL
-        $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/g/geeksoftwareGmbH/PDF24Creator/${latestVersion}/geeksoftwareGmbH.PDF24Creator.installer.yaml"
-        Invoke-LogMessage "Downloading YAML from: $yamlUrl"
-
-        # Download YAML content
-        $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
-        $yamlText = $yamlContent.Content
-
-        # Find the InstallerUrls for x64 and arm64
-        $patternX64 = 'InstallerUrl:\s*(\S*/pdf24-creator-\d+\.\d+\.\d+-x64\.msi)'
-        $patternARM64 = 'InstallerUrl: https://download.pdf24.org/pdf24-creator-11.26.1-arm64.msi'
-
-        $installerUrlX64 = $null
-        $installerUrlARM64 = $null
-
-        if ($yamlText -match $patternX64) {
-            $installerUrlX64 = $matches[1]
-            Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
-        }
-
-        if ($yamlText -match $patternARM64) {
-            $installerUrlARM64 = $matches[1]
-            Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
-        }
-
-        if (-not $installerUrlX64 -and -not $installerUrlARM64) {
-            throw "Installer URLs not found in YAML."
-        }
-
-        if ($arch -eq "ARM processor family") {
-            if (-not $installerUrlARM64) {
-                throw "ARM64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
-                Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
-            } catch {
-                Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filearm64)) {
-                throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
-            }
-
-        } else {
-            if (-not $installerUrlX64) {
-                throw "x64 installer URL not found in YAML."
-            }
-            try {
-                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
-                Invoke-LogMessage "Downloaded x64 installer to $filex64"
-            } catch {
-                Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
-                throw
-            }
-
-            # Verify the file exists
-            if (-not (Test-Path -Path $filex64)) {
-                throw "The x64 installer file does not exist at $filex64. Download may have failed."
-            }
-        }
-
-        # Start installation here
-        if ($arch -like "*ARM*") {
-            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "pdf24_Installer_arm64.msi"
-            Rename-Item -Path $local:filearm64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        } else {
-            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
-            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "pdf24_Installer_x64.msi"
-            Rename-Item -Path $local:filex64 -NewName $renamedFile
-            Invoke-LogMessage "Renamed installer to: $renamedFile"
-            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
-            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
-            Invoke-LogMessage "Removed installer: $renamedFile"
-        }
-        Invoke-LogMessage "Successfully installed PDF24."
-        } catch {
-            Invoke-LogMessage "Error installing PDF24: $($_.Exception.Message)"
-        }
-    }
-############################################################################################################################################
 function Uninstall-TecharyGet {
     param(
         [string]$AppName
@@ -3294,7 +2621,7 @@ function Uninstall-TecharyGet {
         Write-Host "No applications found matching '$AppName'."
     }
 }
-}
+
 function Help-TecharyGet {
 param( 
     [string]$HelpType
@@ -3304,57 +2631,42 @@ if ($HelpType -eq "Install"){
     Write-Host "TecharyGet - A PowerShell module for managing Application Packages."
     Write-Host "How to install an available application"
     Write-Host "TecharyGet install <ApplicationName>"
-    write-Host "Below is a list of ALL available applications, p.s. Harry don't type in the numbers to install:"
-    Write-Host "1. JabraDirect"
-    Write-Host "2. AdobeReader"
-    Write-Host "3. PowerToys"
+    write-Host "Available Applications:"
+    Write-Host "1. Jabra Direct"
+    Write-Host "2. Adobe Acrobat Reader"
+    Write-Host "3. Microsoft PowerToys"
     Write-Host "4. Zoom"
     Write-Host "5. Wireshark"
     Write-Host "6. Nable"
-    Write-Host "7. 8x8Work"
+    Write-Host "7. 8x8 Work"
     Write-Host "8. DisplayLink"
-    Write-Host "9. Chrome"
-    Write-Host "10. Firefox"
-    Write-Host "11. Nodejs"
-    Write-Host "12. VSCode"
-    Write-Host "13. Slack"
-    Write-Host "14. GitHubDesktop"
-    Write-Host "15. PowerBI"
-    Write-Host "16. PowerAutomate"
-    Write-Host "17. MyDPD"
-    Write-Host "18. WindowsApp"
-    Write-Host "19. Bitwarden"
-    Write-Host "20. 7zip"
-    Write-Host "21. DellCommand"
-    Write-Host "22. PowerShell7"
+    Write-Host "9. Google Chrome"
+    Write-Host "10. Jabra Direct"
+    Write-Host "11. Mozilla Firefox"
+    Write-Host "12. Node.js"
+    Write-Host "13. Microsoft Visual Studio Code"
+    Write-Host "14. Slack"
 }
 elseif ($HelpType -eq "Uninstall"){
     Write-Host "TecharyGet - A PowerShell module for managing Application Packages."
     Write-Host "How to uninstall an available application"
     Write-Host "TecharyGet uninstall <ApplicationName>"
-    write-Host "Below is a list of ALL available applications, p.s. Harry don't type in the numbers to uninstall:"
-    Write-Host "1. JabraDirect"
-    Write-Host "2. AdobeReader"
-    Write-Host "3. PowerToys"
+    write-Host "Available Applications:"
+    write-Host "Available Applications:"
+    Write-Host "1. Jabra Direct"
+    Write-Host "2. Adobe Acrobat Reader"
+    Write-Host "3. Microsoft PowerToys"
     Write-Host "4. Zoom"
     Write-Host "5. Wireshark"
     Write-Host "6. Nable"
-    Write-Host "7. 8x8Work"
+    Write-Host "7. 8x8 Work"
     Write-Host "8. DisplayLink"
-    Write-Host "9. Chrome"
-    Write-Host "10. Firefox"
-    Write-Host "11. Nodejs"
-    Write-Host "12. VSCode"
-    Write-Host "13. Slack"
-    Write-Host "14. GitHubDesktop"
-    Write-Host "15. PowerBI"
-    Write-Host "16. PowerAutomate"
-    Write-Host "17. MyDPD"
-    Write-Host "18. WindowsApp"
-    Write-Host "19. Bitwarden"
-    Write-Host "20. 7zip"
-    Write-Host "21. DellCommand"
-    Write-Host "22. PowerShell7"
+    Write-Host "9. Google Chrome"
+    Write-Host "10. Jabra Direct"
+    Write-Host "11. Mozilla Firefox"
+    Write-Host "12. Node.js"
+    Write-Host "13. Microsoft Visual Studio Code"
+    Write-Host "14. Slack"
 }
 else {
     Write-Host "Invalid HelpType. Please specify 'Install' or 'Uninstall'."
