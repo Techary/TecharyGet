@@ -9,7 +9,7 @@ param (
     [string]$AppLogFilePath,
     [string]$AppLogFileNameWithDate,
     [string]$AppLogFilePathWithDate,
-    [string]$folderPath = "c:\temp\TecharyGetInstallationLogs",
+    [string]$folderPath = "c:\logs\TecharyGetLogs",
     [string]$arch,
     [string]$customerID,
     [string]$token,
@@ -21,7 +21,7 @@ param (
 $arch = (Get-ComputerInfo).CSDescription
 $ProgressPreference = 'SilentlyContinue'
 # Initialize logFile here, but with a default value
-$script:logFile = Join-Path -Path $folderPath -ChildPath "TecharyGetinstalls.log"
+$script:logFile = Join-Path -Path $folderPath -ChildPath "TecharyGet.log"
 
 #Set up to use a similar logic of WinGet
 function TecharyGet {
@@ -89,7 +89,7 @@ function Install-TecharyGetPackage {
     )
 
     # Construct file paths using Join-Path and the AppName
-    $script:logFile = Join-Path -Path $script:folderPath -ChildPath "TecharyGetinstalls.log"
+    $script:logFile = Join-Path -Path $script:folderPath -ChildPath "TecharyGet.log"
     $local:filex64 = Join-Path -Path $script:folderPath -ChildPath "${AppName}_x64.msi"
     $local:filearm64 = Join-Path -Path $script:folderPath -ChildPath "${AppName}_arm64.msi"
     $local:filex64zip = Join-Path -Path $script:folderPath -ChildPath "${AppName}_x64.zip"
@@ -198,8 +198,8 @@ function Install-TecharyGetPackage {
             if ($arch -like "*ARM*") {
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Chrome_Installer_arm64.msi"
-                Rename-Item -Path $local:filex64 -NewName $renamedFile
-                Invoke-LogMessage "Renamed installer to: $renamedFile"
+                Rename-Item -Path $local:filearm64 -NewName $renamedFile
+                Invoke-LogMessage "Renamed installer to: $renamedFile"  
                 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
                 Invoke-LogMessage "Removed installer: $renamedFile"
@@ -220,7 +220,7 @@ function Install-TecharyGetPackage {
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-    ############## Firfox Installer ######################
+############## Firfox Installer ######################
     elseif ($AppName -eq "Firefox") {
         try {
             # Get latest version from GitHub API
@@ -420,7 +420,7 @@ function Install-TecharyGetPackage {
             if ($arch -like "*ARM*") {
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Slack_Installer_arm64.msi"
-                Rename-Item -Path $local:filex64 -NewName $renamedFile
+                Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
@@ -641,7 +641,7 @@ function Install-TecharyGetPackage {
             if ($arch -like "*ARM*") {
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "8x8Work_Installer_arm64.msi"
-                Rename-Item -Path $local:filex64 -NewName $renamedFile
+                Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
@@ -666,7 +666,7 @@ function Install-TecharyGetPackage {
 ############## DisplayLink Installer ######################
     elseif ($AppName -eq "DisplayLink") {
         try {
-            $DisplayLinkFolder = "C:\temp\TecharyGetInstallationLogs\PublicSoftware - DisplayLink\DisplayLink_Win10RS.msi"
+            $DisplayLinkFolder = "c:\logs\TecharyGetLogs\PublicSoftware - DisplayLink\DisplayLink_Win10RS.msi"
 
             # Get latest version from GitHub API
             $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/d/DisplayLink/GraphicsDriver"
@@ -835,7 +835,7 @@ function Install-TecharyGetPackage {
             if ($arch -like "*ARM*") {
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "GitHubDesktop_Installer_arm64.msi"
-                Rename-Item -Path $local:filex64 -NewName $renamedFile
+                Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /quiet" -Wait -NoNewWindow
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
@@ -1389,7 +1389,7 @@ function Install-TecharyGetPackage {
             if ($arch -like "*ARM*") {
                 Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Zoom_Installer_arm64.msi"
-                Rename-Item -Path $local:filex64 -NewName $renamedFile
+                Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
@@ -1497,7 +1497,7 @@ function Install-TecharyGetPackage {
             if ($arch -like "*ARM*") {
                 Invoke-LogMessage "Downloaded arm64 installer to $local:filex64"
                 $renamedFile = Join-Path -Path $local:folderPath -ChildPath "Wireshark_Installer_arm64.msi"
-                Rename-Item -Path $local:filex64 -NewName $renamedFile
+                Rename-Item -Path $local:filearm64 -NewName $renamedFile
                 Invoke-LogMessage "Renamed installer to: $renamedFile"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn" -Wait -NoNewWindow
                 Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
@@ -2495,7 +2495,7 @@ elseif ($AppName -eq "WindowsApp"){
         $renamedFile = Join-Path -Path $local:folderPath -ChildPath "WindowsApp_Installer_arm64.msix"
         Rename-Item -Path $local:filearm64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
-        Add-AppxProvisionedPackage -Online -PackagePath "C:\temp\TecharyGetInstallationLogs\WindowsApp_Installer_arm64.msix" -SkipLicense
+        Add-AppxProvisionedPackage -Online -PackagePath "c:\logs\TecharyGetLogs\WindowsApp_Installer_arm64.msix" -SkipLicense
         Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
         Invoke-LogMessage "Removed installer: $renamedFile"
     } else {
@@ -2503,7 +2503,7 @@ elseif ($AppName -eq "WindowsApp"){
         $renamedFile = Join-Path -Path $local:folderPath -ChildPath "WindowsApp_Installer_x64.msix"
         Rename-Item -Path $local:filex64 -NewName $renamedFile
         Invoke-LogMessage "Renamed installer to: $renamedFile"
-        Add-AppxProvisionedPackage -Online -PackagePath "C:\temp\TecharyGetInstallationLogs\WindowsApp_Installer_x64.msix" -SkipLicense
+        Add-AppxProvisionedPackage -Online -PackagePath "c:\logs\TecharyGetLogs\WindowsApp_Installer_x64.msix" -SkipLicense
         Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
         Invoke-LogMessage "Removed installer: $renamedFile"
     }
@@ -3278,7 +3278,7 @@ Install-NvidiaApp -Verbose:$Verbose -DryRun:$DryRun -Force:$Force -Edition $Edit
 ############################################################################################################################################
 ############################################################################################################################################
 ############################################################################################################################################
-############## PDF24 Installer ######################
+############## Microsoft Edge Installer ######################
     elseif($AppName -eq "Edge"){
         Try {
             # Get latest version from GitHub API
@@ -3381,6 +3381,222 @@ Install-NvidiaApp -Verbose:$Verbose -DryRun:$DryRun -Force:$Force -Edition $Edit
         Invoke-LogMessage "Successfully installed Edge."
         } catch {
             Invoke-LogMessage "Error installing Edge: $($_.Exception.Message)"
+        }
+    }
+############################################################################################################################################
+############################################################################################################################################
+############################################################################################################################################
+############## Sublime Text Installer ######################
+    elseif($AppName -eq "SublimeText"){
+        Try {
+            # Get latest version from GitHub API
+        $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/s/SublimeHQ/SublimeText/4"
+        $headers = @{
+            "User-Agent" = "PowerShell"
+            "Accept" = "application/vnd.github.v3+json"
+        }
+        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
+
+        $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
+            try { [version]$_.name } catch { $null }
+        } | Where-Object { $_ -ne $null }
+
+        $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
+        Invoke-LogMessage "Latest version found: $latestVersion"    
+
+        # Build YAML URL from Github to gather Installation URL
+        $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/s/SublimeHQ/SublimeText/4/${latestVersion}/SublimeHQ.SublimeText.4.installer.yaml"
+        Invoke-LogMessage "Downloading YAML from: $yamlUrl"
+
+        # Download YAML content
+        $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
+        $yamlText = $yamlContent.Content
+
+        # Find the InstallerUrls for x64 and arm64
+        $patternX64 = 'InstallerUrl:\s*(\S*/sublime_text_build_\d+_x64_setup\.exe)'
+        $patternARM64 = 'InstallerUrl:\s*(\S*/sublime_text_build_\d+_x64_setup\.exe)'
+
+        $installerUrlX64 = $null
+        $installerUrlARM64 = $null
+
+        if ($yamlText -match $patternX64) {
+            $installerUrlX64 = $matches[1]
+            Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
+        }
+
+        if ($yamlText -match $patternARM64) {
+            $installerUrlARM64 = $matches[1]
+            Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
+        }
+
+        if (-not $installerUrlX64 -and -not $installerUrlARM64) {
+            throw "Installer URLs not found in YAML."
+        }
+
+        if ($arch -eq "ARM processor family") {
+            if (-not $installerUrlARM64) {
+                throw "ARM64 installer URL not found in YAML."
+            }
+            try {
+                Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
+                Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+            } catch {
+                Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
+                throw
+            }
+
+            # Verify the file exists
+            if (-not (Test-Path -Path $filearm64)) {
+                throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
+            }
+
+        } else {
+            if (-not $installerUrlX64) {
+                throw "x64 installer URL not found in YAML."
+            }
+            try {
+                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
+                Invoke-LogMessage "Downloaded x64 installer to $filex64"
+            } catch {
+                Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
+                throw
+            }
+
+            # Verify the file exists
+            if (-not (Test-Path -Path $filex64)) {
+                throw "The x64 installer file does not exist at $filex64. Download may have failed."
+            }
+        }
+
+        # Start installation here
+        if ($arch -like "*ARM*") {
+            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "SublimeText_Installer_arm64.exe"
+            Rename-Item -Path $local:filearm64 -NewName $renamedFile
+            Invoke-LogMessage "Renamed installer to: $renamedFile"
+            Start-Process -FilePath $renamedFile -ArgumentList " /VERYSILENT /NORESTART" -Wait -ErrorAction Stop
+            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+            Invoke-LogMessage "Removed installer: $renamedFile"
+        } else {
+            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "SublimeText_Installer_x64.exe"
+            Rename-Item -Path $local:filex64 -NewName $renamedFile
+            Invoke-LogMessage "Renamed installer to: $renamedFile"
+            Start-Process -FilePath $renamedFile -ArgumentList " /VERYSILENT /NORESTART" -Wait -ErrorAction Stop
+            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+            Invoke-LogMessage "Removed installer: $renamedFile"
+        }
+        Invoke-LogMessage "Successfully installed Sublime Text."
+        } catch {
+            Invoke-LogMessage "Error installing Sublime Text: $($_.Exception.Message)"
+        }
+    }
+############################################################################################################################################
+############################################################################################################################################
+############################################################################################################################################
+############## Cisco Webex Installer ######################
+    elseif($AppName -eq "Webex"){
+        Try {
+            # Get latest version from GitHub API
+        $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/c/Cisco/Webex"
+        $headers = @{
+            "User-Agent" = "PowerShell"
+            "Accept" = "application/vnd.github.v3+json"
+        }
+        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers
+
+        $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
+            try { [version]$_.name } catch { $null }
+        } | Where-Object { $_ -ne $null }
+
+        $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
+        Invoke-LogMessage "Latest version found: $latestVersion"    
+
+        # Build YAML URL from Github to gather Installation URL
+        $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/c/Cisco/Webex/${latestVersion}/Cisco.Webex.installer.yaml"
+        Invoke-LogMessage "Downloading YAML from: $yamlUrl"
+
+        # Download YAML content
+        $yamlContent = Invoke-WebRequest -Uri $yamlUrl -UseBasicParsing
+        $yamlText = $yamlContent.Content
+
+        # Find the InstallerUrls for x64 and arm64
+        $patternX64 = 'InstallerUrl:\s*(\S*/Webex\.msi)'
+        $patternARM64 = 'InstallerUrl:\s*(\S*/Webex\.msi)'
+
+        $installerUrlX64 = $null
+        $installerUrlARM64 = $null
+
+        if ($yamlText -match $patternX64) {
+            $installerUrlX64 = $matches[1]
+            Invoke-LogMessage "x64 Installer URL: $installerUrlX64"
+        }
+
+        if ($yamlText -match $patternARM64) {
+            $installerUrlARM64 = $matches[1]
+            Invoke-LogMessage "ARM64 Installer URL: $installerUrlARM64"
+        }
+
+        if (-not $installerUrlX64 -and -not $installerUrlARM64) {
+            throw "Installer URLs not found in YAML."
+        }
+
+        if ($arch -eq "ARM processor family") {
+            if (-not $installerUrlARM64) {
+                throw "ARM64 installer URL not found in YAML."
+            }
+            try {
+                Invoke-WebRequest -Uri $installerUrlarm64 -OutFile $filearm64
+                Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+            } catch {
+                Invoke-LogMessage "Error downloading ARM64 installer: $($_.Exception.Message)"
+                throw
+            }
+
+            # Verify the file exists
+            if (-not (Test-Path -Path $filearm64)) {
+                throw "The ARM64 installer file does not exist at $filearm64. Download may have failed."
+            }
+
+        } else {
+            if (-not $installerUrlX64) {
+                throw "x64 installer URL not found in YAML."
+            }
+            try {
+                Invoke-WebRequest -Uri $installerUrlX64 -OutFile $filex64
+                Invoke-LogMessage "Downloaded x64 installer to $filex64"
+            } catch {
+                Invoke-LogMessage "Error downloading x64 installer: $($_.Exception.Message)"
+                throw
+            }
+
+            # Verify the file exists
+            if (-not (Test-Path -Path $filex64)) {
+                throw "The x64 installer file does not exist at $filex64. Download may have failed."
+            }
+        }
+
+        # Start installation here
+        if ($arch -like "*ARM*") {
+            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "SublimeText_Installer_arm64.exe"
+            Rename-Item -Path $local:filearm64 -NewName $renamedFile
+            Invoke-LogMessage "Renamed installer to: $renamedFile"
+            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn ACCEPT_EULA=TRUE" -Wait -NoNewWindow
+            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+            Invoke-LogMessage "Removed installer: $renamedFile"
+        } else {
+            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "SublimeText_Installer_x64.exe"
+            Rename-Item -Path $local:filex64 -NewName $renamedFile
+            Invoke-LogMessage "Renamed installer to: $renamedFile"
+            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$renamedFile`" ALLUSERS=1 /qn ACCEPT_EULA=TRUE" -Wait -NoNewWindow
+            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+            Invoke-LogMessage "Removed installer: $renamedFile"
+        }
+        Invoke-LogMessage "Successfully installed Webex."
+        } catch {
+            Invoke-LogMessage "Error installing Webex: $($_.Exception.Message)"
         }
     }
 ############################################################################################################################################
