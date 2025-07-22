@@ -2631,7 +2631,7 @@ elseif ($AppName -eq "WindowsApp"){
             Invoke-LogMessage "Error installing Dell Command: $($_.Exception.Message)"
         }
     }
-############################################################################################################################################
+####################################################################################`########################################################
 ############################################################################################################################################
 ############################################################################################################################################
 ############## PowerShell 7 Installer ######################
@@ -3599,6 +3599,67 @@ Install-NvidiaApp -Verbose:$Verbose -DryRun:$DryRun -Force:$Force -Edition $Edit
             Invoke-LogMessage "Error installing Webex: $($_.Exception.Message)"
         }
     }
+############################################################################################################################################
+############################################################################################################################################
+############################################################################################################################################
+############## Cisco Webex Installer ######################
+    elseif($AppName -eq "Crosschex"){
+        Try {
+        # Define URL
+        $url = 'https://www.anviz.com/download/2.html'
+
+        # Fetch HTML
+        $response = Invoke-WebRequest -Uri $url -UseBasicParsing
+        $html = $response.Content
+
+        # Extract entries: date + link
+        $pattern = '(?ms)(\d{2}/\d{2}/\d{4}).*?href="([^"]+?)".*?>([^<]+?)<'
+        $match = [regex]::Matches($html, $pattern)
+
+        # Transform into objects
+        $files = $match | ForEach-Object {
+            $dateStr = $_.Groups[1].Value
+            [pscustomobject]@{
+                Date = [datetime]::ParseExact($dateStr, 'MM/dd/yyyy', $null)
+                Url  = $_.Groups[2].Value
+                Name = $_.Groups[3].Value.Trim()
+            }
+        }
+
+        # Find newest
+        $latest = $files | Sort-Object Date -Descending | Select-Object -First 1
+
+        if ($arch -eq "ARM processor family") {
+            Invoke-WebRequest -Uri $latest.url -OutFile $filearm64
+            Invoke-LogMessage "Downloaded ARM64 installer to $filearm64"
+        } else {
+            Invoke-WebRequest -Uri $latest.url -OutFile $filex64
+            Invoke-LogMessage "Downloaded x64 installer to $filex64"
+        }
+
+        # Install 8x8 Work based on architecture
+        if ($arch -eq "ARM processor family") {
+            Invoke-LogMessage "Downloaded arm64 installer to $local:filearm64"
+            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "CrossChex_Installer_arm64.exe"
+            Rename-Item -Path $local:filearm64 -NewName $renamedFile
+            Invoke-LogMessage "Renamed installer to: $renamedFile"
+            Start-Process -FilePath $renamedFile -ArgumentList "/exenoui ALLUSERS=1 /qn" -Wait -ErrorAction Stop
+            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+            Invoke-LogMessage "Removed installer: $renamedFile"
+        } else {
+            Invoke-LogMessage "Downloaded x64 installer to $local:filex64"
+            $renamedFile = Join-Path -Path $local:folderPath -ChildPath "CrossChex_Installer_x64.exe"
+            Rename-Item -Path $local:filex64 -NewName $renamedFile
+            Invoke-LogMessage "Renamed installer to: $renamedFile"
+            Start-Process -FilePath $renamedFile -ArgumentList "/exenoui ALLUSERS=1 /qn" -Wait -ErrorAction Stop
+            Remove-Item -Path $renamedFile -Force # Remove the renamed MSI after installation
+            Invoke-LogMessage "Removed installer: $renamedFile"
+        }
+        Invoke-LogMessage "Successfully installed CrossChex."
+        } catch {
+            Invoke-LogMessage "Error installing CrossChex: $($_.Exception.Message)"
+        }
+}
 ############################################################################################################################################
 function Uninstall-TecharyGet {
     param(
