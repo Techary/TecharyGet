@@ -58,7 +58,7 @@ Help-TecharyApp
 
 ## 📦 AppMap Configuration
 
-Apps are defined in a separate file AppMap.ps1, with the following structure:
+Apps are defined in a separate file AppMap.ps1, with the following structure for Winget available apps:
 ``` Poweshell
 "7zip" = @{
     DisplayName     = "7Zip"
@@ -70,6 +70,17 @@ Apps are defined in a separate file AppMap.ps1, with the following structure:
     ExeInstallArgs  = "/S"
     IsWinget        = $true
     WingetID        = "7zip.7zip"
+}
+```
+
+For custom apps that are not available in Winget are structured similar like this:
+```Powershell
+"mydpd" = @{
+    DisplayName     = "MyDPD Customer"
+    IsWinget        = $false
+    DownloadUrl     = "https://apis.my.dpd.co.uk/apps/download/public"
+    InstallerType   = "exe"
+    ExeInstallArgs  = "--Silent"
 }
 ```
 ## 💡 Notes
