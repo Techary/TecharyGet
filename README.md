@@ -59,7 +59,7 @@ Help-TecharyApp
 ## 📦 AppMap Configuration
 
 Apps are defined in a separate file AppMap.ps1, with the following structure for Winget available apps:
-``` Poweshell
+``` Powesrhell
 "bitwarden" = @{
     DisplayName     = "Bitwarden"
     RepoPath        = "b/Bitwarden/Bitwarden"
