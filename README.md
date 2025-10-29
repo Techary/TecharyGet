@@ -53,7 +53,7 @@ Get-TecharyAppList
 
 **Show Help**
 ```Powershell
-Get-TecharyHelp
+Help-TecharyApp
 ```
 
 ## 📦 AppMap Configuration
