@@ -38,10 +38,42 @@ function Install-TecharyApp {
     }
 
     # Handle special app logic or fallback
-    if ($AppKey -eq "nable") {
-        # [Insert custom N-able logic here if needed]
-        return
+if ($AppKey -eq "nable") {
+    $required = @("CustomerID", "Token", "CustomerName", "ServerAddress")
+    foreach ($key in $required) {
+        if (-not $Parameters.ContainsKey($key)) {
+            throw "[Nable] Missing required parameter: $key"
+        }
     }
+
+    $customerID    = $Parameters.CustomerID
+    $token         = $Parameters.Token
+    $customerName  = $Parameters.CustomerName
+    $serverAddress = $Parameters.ServerAddress
+
+    # Ensure folder exists
+    if (-not (Test-Path $script:folderPath)) {
+        New-Item -Path $script:folderPath -ItemType Directory -Force | Out-Null
+    }
+
+    $fileName = "Nable_RMMInstaller.exe"
+    $installerPath = Join-Path $script:folderPath $fileName
+    $downloadUrl = "https://$serverAddress/download/current/winnt/N-central/WindowsAgentSetup.exe"
+
+    Invoke-LogMessage "[Nable] Downloading installer from: $downloadUrl"
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $installerPath -UseBasicParsing
+
+    $msiArgs = "/qn CUSTOMERID=$customerID CUSTOMERNAME=$customerName CUSTOMERSPECIFIC=1 REGISTRATION_TOKEN=$token SERVERPROTOCOL=HTTPS SERVERADDRESS=$serverAddress SERVERPORT=443"
+    $arguments = "/S /v`"$msiArgs`""
+
+    Invoke-LogMessage "[Nable] Installing with arguments: $arguments"
+    Start-Process -FilePath $installerPath -ArgumentList $arguments -Wait -NoNewWindow
+
+    Remove-Item $installerPath -Force
+    Invoke-LogMessage "[Nable] Installed and cleaned up"
+    return
+}
+
 
     # Custom static download
     if (-not $app.IsWinget -and $app.DownloadUrl) {
