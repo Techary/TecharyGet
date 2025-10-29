@@ -18,7 +18,7 @@
 
 * Architecture-aware (x64, ARM64)
 
-## 📥 Installation Commands
+## 📥 Available Commands
 **Install an App**
 ```Powershell
 Install-TecharyApp -AppName "7zip"
