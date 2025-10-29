@@ -470,19 +470,19 @@ $script:TecharyApps = @{
 #region N-Able RMM Agent
 # How to Install
 # Install-TecharyApp -AppName "nable" -Parameters @{
-# CustomerID    = "123456" i.e Techary = 101
+# CustomerID    = "123456" Can be found under Administration > Customer
 # Token         = "abcdefg" Token is got under Actions > Add/Import Devices > Get Registration Token
-# CustomerName  = '\"Techary Internal\"' #This has to be formatted like this with the name of their customer in nable
-#  ServerAddress = "control.techary.com"
+# CustomerName  = '\"<customer name in nable>\"' #This has to be formatted like this with the name of their customer in nable
+#  ServerAddress = "<nable server address>"
 # }
 
 "nable" = @{
     DisplayName   = "N-Able RMM Agent"
     IsWinget      = $false
     InstallerType = "exe"
-    ExeInstallArgs  = "/qn /v"
 }
 #endregion
 
 
 }
+
