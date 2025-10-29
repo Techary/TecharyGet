@@ -60,16 +60,16 @@ Help-TecharyApp
 
 Apps are defined in a separate file AppMap.ps1, with the following structure for Winget available apps:
 ``` Poweshell
-"7zip" = @{
-    DisplayName     = "7Zip"
-    RepoPath        = "7/7zip/7zip"
-    YamlFile        = "7zip.7zip.installer.yaml"
-    PatternX64      = 'InstallerUrl:\s*(\S*/7z\d+-x64\.exe)'
-    PatternARM64    = 'InstallerUrl:\s*(\S*/7z\d+-arm64\.exe)'
+"bitwarden" = @{
+    DisplayName     = "Bitwarden"
+    RepoPath        = "b/Bitwarden/Bitwarden"
+    YamlFile        = "Bitwarden.Bitwarden.installer.yaml"
+    PatternX64      = 'InstallerUrl:\s*(\S*/Bitwarden-Installer-\S+\.exe)'
+    PatternARM64    = 'InstallerUrl:\s*(\S*/Bitwarden-Installer-\S+\.exe)'
     InstallerType   = "exe"
-    ExeInstallArgs  = "/S"
+    ExeInstallArgs  = "/allusers /S"
     IsWinget        = $true
-    WingetID        = "7zip.7zip"
+    WingetID        = "Bitwarden.Bitwarden"
 }
 ```
 
