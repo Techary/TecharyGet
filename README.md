@@ -29,8 +29,8 @@ Install-TecharyApp -AppName "7zip"
 Install-TecharyApp -AppName "nable" -Parameters @{
     CustomerID    = "123"
     Token         = "abcdef-12345"
-    CustomerName  = "My Company"
-    ServerAddress = "control.example.com"
+    CustomerName  = '\"customer name\"'
+    ServerAddress = "nable.serveraddress.com"
 }
 ```
 **Uninstall an App**
