@@ -3,16 +3,16 @@
     RootModule        = 'TecharyGet.psm1'
 
     # Version of this module
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.0'
 
     # ID used to uniquely identify this module
     GUID              = '8d777e7e-fd28-4e34-bf9d-0c325bb81a76'
 
     # Author of this module
-    Author            = 'Techary IT Team'
+    Author            = 'Adam Sweetapple'
 
     # Company or vendor of this module
-    CompanyName       = 'Techary Ltd.'
+    CompanyName       = 'Techary'
 
     # Copyright
     Copyright         = '(c) 2025 Techary. All rights reserved.'
@@ -24,12 +24,7 @@
     PowerShellVersion = '5.1'
 
     # Functions to export
-    FunctionsToExport = @(
-        'Install-TecharyApp',
-        'Uninstall-TecharyApp',
-        'Show-TecharyHelp',
-        'Get-TecharyAppList'
-    )
+    FunctionsToExport = "Install-TecharyApp","Uninstall-TecharyApp","Help-TecharyApp","Get-TecharyAppList"
 
     # Cmdlets to export
     CmdletsToExport   = @()
