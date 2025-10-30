@@ -1,3 +1,5 @@
+<img width="1536" height="1024" alt="ChatGPT Image Oct 30, 2025, 09_09_28 AM" src="https://github.com/user-attachments/assets/fb7f9529-9ab6-4f86-a33f-bcfce081be86" />
+
 # 📦 TecharyGet PowerShell Module
 
 > **Author:** Adam Sweetapple
