@@ -1,12 +1,12 @@
 <img width="1536" height="1024" alt="ChatGPT Image Oct 30, 2025, 09_09_28 AM" src="https://github.com/user-attachments/assets/fb7f9529-9ab6-4f86-a33f-bcfce081be86" />
 
-# 📦 TecharyGet PowerShell Module
+# TecharyGet PowerShell Module
 
 > **Author:** Adam Sweetapple
 
 > **Purpose:** Install and uninstall software using custom Winget logic and external installer definitions (including EXE, MSI, ZIP, MSIX).
 
-## 🛠️ Features
+## Features
 
 * Installs apps from Winget using GitHub-hosted YAMLs
 
@@ -20,7 +20,7 @@
 
 * Architecture-aware (x64, ARM64)
 
-## 📥 Available Commands
+## Available Commands
 **Install an App**
 ```Powershell
 Install-TecharyApp -AppName "7zip"
@@ -58,9 +58,11 @@ Get-TecharyAppList
 Help-TecharyApp
 ```
 
-## 📦 AppMap Configuration
+## AppMap Configuration
 
-Apps are defined in a separate file AppMap.ps1, with the following structure for Winget available apps:
+Apps are defined in a separate file, AppMap.ps1, hosted in the GitHub Repository.
+
+The following structure lists the available Winget apps:
 ``` Powershell
 "bitwarden" = @{
     DisplayName     = "Bitwarden"
@@ -85,7 +87,7 @@ For custom apps that are not available in Winget are structured similar like thi
     ExeInstallArgs  = "--Silent"
 }
 ```
-## 💡 Notes
+## Notes
 
 * The module detects CPU architecture and installs the correct version.
 
@@ -95,6 +97,8 @@ For custom apps that are not available in Winget are structured similar like thi
 
 * You can run winget.exe directly (e.g. for SYSTEM context via Intune) using its resolved path in C:\Program Files\WindowsApps\...
 
+* Hosting the AppMap.ps1 file means that we can manage all app installs from a centralised location for ALL of out customers.
+
 ## 🧪 Tested With
 
 * Intune deployments (System context)
@@ -103,7 +107,7 @@ For custom apps that are not available in Winget are structured similar like thi
 
 * PowerShell 5.1 and 7+
 
-## 🧯 Troubleshooting
+## Troubleshooting
 
 * ❗ App not found? → Make sure it's defined in AppMap.ps1
 
