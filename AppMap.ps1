@@ -113,9 +113,23 @@ $script:TecharyApps = @{
 }
 #endregion
 
-#region 7Zip
+#region Git
+"git" = @{
+    DisplayName     = "Git"
+    RepoPath        = "g/Git/Git"
+    YamlFile        = "Git.Git.installer.yaml"
+    PatternX64      = 'InstallerUrl:\s*(\S*/Git-\d+\.\d+\.\d+(-windows-\d+)?-64-bit\.exe)'
+    PatternARM64    = 'InstallerUrl:\s*(\S*/Git-\d+\.\d+\.\d+(-windows-\d+)?-arm64\.exe)'
+    InstallerType   = "exe"
+    ExeInstallArgs  = "/SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
+    IsWinget        = $true
+    WingetID        = "Git.Git"
+}
+#endregion
+
+#region 7zip
 "7zip" = @{
-    DisplayName     = "7Zip"
+    DisplayName     = "7zip"
     RepoPath        = "7/7zip/7zip"
     YamlFile        = "7zip.7zip.installer.yaml"
     PatternX64      = 'InstallerUrl:\s*(\S*/7z\d+-x64\.exe)'
@@ -342,16 +356,17 @@ $script:TecharyApps = @{
 }
 #endregion
 
-#region Neovim
-"neovim" = @{
-    DisplayName     = "Neovim"
-    RepoPath        = "n/Neovim/Neovim"
-    YamlFile        = "Neovim.Neovim.installer.yaml"
-    PatternX64      = 'InstallerUrl:\s*(\S*/nvim-win64\.msi)'
-    PatternARM64    = 'InstallerUrl:\s*(\S*/nvim-win64\.msi)'
-    InstallerType   = "msi"
+#region VLC Media Player
+"vlc" = @{
+    DisplayName     = "VLC Media Player"
+    RepoPath        = "v/VideoLAN/VLC"
+    YamlFile        = "VideoLAN.VLC.installer.yaml"
+    PatternX64      = 'InstallerUrl:\s*(\S*/vlc-\d+\.\d+\.\d+-win64\.exe)'
+    PatternARM64    = 'InstallerUrl:\s*(\S*/vlc-\d+\.\d+\.\d+-win64\.exe)'
+    InstallerType   = "exe"
     IsWinget        = $true
-    WingetID        = "Neovim.Neovim"
+    ExeInstallArgs  = "/S"
+    WingetID        = "VideoLAN.VLC"
 }
 #endregion
 
@@ -447,16 +462,6 @@ $script:TecharyApps = @{
 }
 #endregion
 
-#region HIKVISION
-"hikvision" = @{
-    DisplayName     = "hikvision iVMS-4200"
-    IsWinget        = $false
-    DownloadUrl     = "https://www.hikvision.com/content/dam/hikvision/en/support/download/vms/ivms4200-series/software-download/v3-13-1-5/iVMS-4200V3.13.1.5_E.exe"
-    InstallerType   = "exe"
-    ExeInstallArgs  = "/exenoui ALLUSERS=1 /qn"
-}
-#endregion
-
 #region Coreldraw
 "coreldraw" = @{
     DisplayName     = "Coreldraw"
@@ -469,20 +474,20 @@ $script:TecharyApps = @{
 
 #region N-Able RMM Agent
 # How to Install
-# Install-TecharyApp -AppName "nable" -Parameters @{
-# CustomerID    = "123456" Can be found under Administration > Customer
+#Install-TecharyApp -AppName "nable" -Parameters @{
+# CustomerID    = "123456" This can be found in N-Central under Administration > Customers, there you will see the Access Code column
 # Token         = "abcdefg" Token is got under Actions > Add/Import Devices > Get Registration Token
-# CustomerName  = '\"<customer name in nable>\"' #This has to be formatted like this with the name of their customer in nable
-#  ServerAddress = "<nable server address>"
+# CustomerName  = '\"Company Name From N-Central\"' #This has to be formatted like this with the name of their customer in nable
+#  ServerAddress = "Refer to Confluence guide for the server address"
 # }
 
 "nable" = @{
     DisplayName   = "N-Able RMM Agent"
     IsWinget      = $false
     InstallerType = "exe"
+    ExeInstallArgs  = "/qn /v"
 }
 #endregion
 
 
 }
-
