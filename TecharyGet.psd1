@@ -3,7 +3,7 @@
     RootModule        = 'TecharyGet.psm1'
 
     # Version of this module
-    ModuleVersion     = '1.0'
+    ModuleVersion     = '1.1'
 
     # ID used to uniquely identify this module
     GUID              = '8d777e7e-fd28-4e34-bf9d-0c325bb81a76'
@@ -18,7 +18,7 @@
     Copyright         = '(c) 2025 Techary. All rights reserved.'
 
     # Description of the module
-    Description       = 'A PowerShell module for managing app installations and uninstalls using Winget, MSI, EXE, ZIP, and MSIX sources. Supports custom logic and Intune deployment.'
+    Description       = 'A PowerShell module for managing app installations and uninstalls using Winget Repo, MSI, EXE, ZIP, and MSIX sources. Supports custom logic and Intune deployment.'
 
     # Minimum version of PowerShell required
     PowerShellVersion = '5.1'
