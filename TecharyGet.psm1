@@ -26,7 +26,7 @@ function Install-TecharyApp {
     }
 
     # Download the latest AppMap.ps1
-    Invoke-WebRequest -Uri "https://content.techary.com/TecharyGet/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Techary/TecharyGet/refs/heads/main/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
 
     if (-not $script:TecharyApps) {
         . "$PSScriptRoot\AppMap.ps1"
@@ -144,7 +144,7 @@ function Uninstall-TecharyApp {
     }
 
     # Download the latest AppMap.ps1
-    Invoke-WebRequest -Uri "https://content.techary.com/TecharyGet/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Techary/TecharyGet/refs/heads/main/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
 
     if (-not $script:TecharyApps) {
         . "$PSScriptRoot\AppMap.ps1"
@@ -376,7 +376,7 @@ function Get-TecharyAppList {
     }
 
     # Download the latest AppMap.ps1
-    Invoke-WebRequest -Uri "https://content.techary.com/TecharyGet/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Techary/TecharyGet/refs/heads/main/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
 
     if (-not $script:TecharyApps) {
         . "$PSScriptRoot\AppMap.ps1"
