@@ -19,6 +19,15 @@ function Install-TecharyApp {
         [hashtable]$Parameters
     )
 
+    #If AppMap.ps1 exists, remove it to ensure we get the latest version
+    $AppMapexists = Test-Path "$PSScriptRoot\AppMap.ps1"
+    if ($AppMapexists) {
+        Remove-Item "$PSScriptRoot\AppMap.ps1" -Force
+    }
+
+    # Download the latest AppMap.ps1
+    Invoke-WebRequest -Uri "https://content.techary.com/TecharyGet/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
+
     if (-not $script:TecharyApps) {
         . "$PSScriptRoot\AppMap.ps1"
     }
@@ -127,6 +136,15 @@ function Uninstall-TecharyApp {
     param (
         [string]$AppName
     )
+
+    #If AppMap.ps1 exists, remove it to ensure we get the latest version
+    $AppMapexists = Test-Path "$PSScriptRoot\AppMap.ps1"
+    if ($AppMapexists) {
+        Remove-Item "$PSScriptRoot\AppMap.ps1" -Force
+    }
+
+    # Download the latest AppMap.ps1
+    Invoke-WebRequest -Uri "https://content.techary.com/TecharyGet/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
 
     if (-not $script:TecharyApps) {
         . "$PSScriptRoot\AppMap.ps1"
@@ -274,12 +292,17 @@ function Install-TecharyWingetApp {
         throw "[$AppName] Installer URL not found in YAML."
     }
 
-    $ext = [System.IO.Path]::GetExtension($installerUrl)
+    # Clean the filename from the URL (removing query parameters like ?archType=x64)
+    $cleanInstallerUrl = $installerUrl -split '\?' | Select-Object -First 1
+    $ext = [System.IO.Path]::GetExtension($cleanInstallerUrl)
+
     if (-not $ext) { $ext = ".exe" }
 
     $fileName = "${AppName}_Installer_${suffix}${ext}"
     $installerPath = Join-Path $script:folderPath $fileName
-
+`
+    # Now download the file using the full URL
+    Invoke-LogMessage "[$AppName] Downloading installer from: $installerUrl"
     Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
 
     switch ($InstallerType) {
@@ -321,41 +344,7 @@ function Install-TecharyWingetApp {
 #endregion
 
 #region Help
-function help-techaryapp {
-    <#
-    .SYNOPSIS
-        Displays help information for using the TecharyGet module.
-
-    .DESCRIPTION
-        Shows available commands, parameters, and usage examples for installing and uninstalling apps via TecharyGet.
-
-    .EXAMPLE
-        Get-TecharyHelp
-        Displays this help information.
-
-    .EXAMPLE
-        Install-TecharyApp -AppName "adobereader"
-        Installs Adobe Reader from the latest Winget package using custom logic.
-
-    .EXAMPLE
-        Uninstall-TecharyApp -AppName "bitwarden"
-        Uninstalls Bitwarden using Winget or registry fallback.
-
-    .EXAMPLE
-        Install-TecharyApp -AppName "nable" -Parameters @{
-            CustomerID    = "123"
-            Token         = "abcdef-12345"
-            CustomerName  = '\"Company Name\"'
-            ServerAddress = "control.n-able.com"
-        }
-        Installs N-Able RMM agent with custom parameters.
-
-    .EXAMPLE
-        Get-TecharyAppList
-        Returns a list of all available apps defined in the AppMap.
-
-    #>
-
+function Help-TecharyApp {
     Write-Host ""
     Write-Host "TecharyApp PowerShell Module Help" -ForegroundColor Cyan
     Write-Host "==================================" -ForegroundColor Cyan
@@ -379,6 +368,16 @@ function help-techaryapp {
 
 #region Get-TecharyAppList
 function Get-TecharyAppList {
+
+    #If AppMap.ps1 exists, remove it to ensure we get the latest version
+    $AppMapexists = Test-Path "$PSScriptRoot\AppMap.ps1"
+    if ($AppMapexists) {
+        Remove-Item "$PSScriptRoot\AppMap.ps1" -Force
+    }
+
+    # Download the latest AppMap.ps1
+    Invoke-WebRequest -Uri "https://content.techary.com/TecharyGet/AppMap.ps1" -OutFile "$PSScriptRoot\AppMap.ps1" -UseBasicParsing
+
     if (-not $script:TecharyApps) {
         . "$PSScriptRoot\AppMap.ps1"
     }
