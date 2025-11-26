@@ -400,7 +400,7 @@ function Update-TecharyGetModule {
     param (
         [string]$RepoOwner = "Techary",
         [string]$RepoName = "TecharyGet",
-        [string]$Branch = "main",  # or 'master' if you use that
+        [string]$Branch = "main",
         [string]$ModuleName = "TecharyGet",
         [string]$ModulePath = "$PSScriptRoot"
     )
@@ -449,7 +449,7 @@ function Update-TecharyGetModule {
 
         Write-Host "Update complete."
     } else {
-        Write-Host "Module is up to date bro."
+        Write-Host "Module is up to date."
     }
 }
 
