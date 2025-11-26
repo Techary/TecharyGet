@@ -343,7 +343,7 @@ function Install-TecharyWingetApp {
 }
 #endregion
 
-#region Help
+#region Help-TecharyApp
 function Help-TecharyApp {
     Write-Host ""
     Write-Host "TecharyApp PowerShell Module Help" -ForegroundColor Cyan
@@ -394,7 +394,6 @@ function Get-TecharyAppList {
     }
 }
 #endregion
-
 
 #region Update-TecharyApp
 function Update-TecharyGetModule {
