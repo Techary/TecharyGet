@@ -3,7 +3,7 @@
     RootModule        = 'TecharyGet.psm1'
 
     # Version of this module
-    ModuleVersion     = '1.1'
+    ModuleVersion     = '1.2'
 
     # ID used to uniquely identify this module
     GUID              = '8d777e7e-fd28-4e34-bf9d-0c325bb81a76'
@@ -44,3 +44,4 @@
         }
     }
 }
+
