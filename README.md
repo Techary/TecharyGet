@@ -35,6 +35,11 @@ Install-TecharyApp -AppName "nable" -Parameters @{
     ServerAddress = "nable.serveraddress.com"
 }
 ```
+**Update TecharyGet Module**
+To get the latest TecharyGet Module, please run the following:
+```Powershell
+Update-TecharyGetModule
+```
 **Uninstall an App**
 ```Powershell
 Uninstall-TecharyApp -AppName "bitwarden"

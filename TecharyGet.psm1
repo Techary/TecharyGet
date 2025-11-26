@@ -397,7 +397,7 @@ function Get-TecharyAppList {
 
 
 #region Update-TecharyApp
-function Update-TecharyModule {
+function Update-TecharyGetModule {
     param (
         [string]$RepoOwner = "Techary",
         [string]$RepoName = "TecharyGet",
@@ -448,9 +448,10 @@ function Update-TecharyModule {
             }
         }
 
-        Write-Host "✅ Update complete."
+        Write-Host "Update complete."
     } else {
         Write-Host "Module is up to date."
     }
 }
+
 #endregion
