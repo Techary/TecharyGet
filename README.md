@@ -36,6 +36,7 @@ Install-TecharyApp -AppName "nable" -Parameters @{
 }
 ```
 **Update TecharyGet Module**
+
 To get the latest TecharyGet Module, please run the following:
 ```Powershell
 Update-TecharyGetModule
