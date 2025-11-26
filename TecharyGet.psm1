@@ -394,3 +394,63 @@ function Get-TecharyAppList {
     }
 }
 #endregion
+
+
+#region Update-TecharyApp
+function Update-TecharyModule {
+    param (
+        [string]$RepoOwner = "Techary",
+        [string]$RepoName = "TecharyGet",
+        [string]$Branch = "main",  # or 'master' if you use that
+        [string]$ModuleName = "TecharyGet",
+        [string]$ModulePath = "$PSScriptRoot"
+    )
+
+    $localPSD = Join-Path $ModulePath "$ModuleName.psd1"
+    if (-not (Test-Path $localPSD)) {
+        Write-Host "Local .psd1 file not found at $localPSD"
+        return
+    }
+
+    # Get local version
+    $localModule = Import-PowerShellDataFile -Path $localPSD
+    $localVersion = [version]$localModule.ModuleVersion
+    Write-Host "Local version: $localVersion"
+
+    # Get remote psd1 raw content from GitHub
+    $remotePSDUrl = "https://raw.githubusercontent.com/$RepoOwner/$RepoName/refs/heads/$Branch/$ModuleName.psd1"
+    try {
+        $remoteText = Invoke-WebRequest -Uri $remotePSDUrl -UseBasicParsing
+        $tempFile = Join-Path $env:TEMP "$ModuleName.remote.psd1"
+        $remoteText.Content | Set-Content -Path $tempFile -Encoding UTF8
+        $remoteModule = Import-PowerShellDataFile -Path $tempFile
+        $remoteVersion = [version]$remoteModule.ModuleVersion
+        Remove-Item $tempFile -Force
+    } catch {
+        Write-Host "Failed to fetch remote version: $_"
+        return
+    }
+
+    Write-Host "Remote version: $remoteVersion"
+
+    if ($remoteVersion -gt $localVersion) {
+        Write-Host "Updating module from GitHub..."
+
+        $filesToDownload = @("$ModuleName.psm1", "$ModuleName.psd1")
+        foreach ($file in $filesToDownload) {
+            $url = "https://raw.githubusercontent.com/$RepoOwner/$RepoName/refs/heads/$Branch/$file"
+            $dest = Join-Path $ModulePath $file
+            try {
+                Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing
+                Write-Host "Updated: $file"
+            } catch {
+                Write-Warning "Failed to update ${file}: $_"
+            }
+        }
+
+        Write-Host "✅ Update complete."
+    } else {
+        Write-Host "Module is up to date."
+    }
+}
+#endregion
