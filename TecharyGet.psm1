@@ -450,7 +450,8 @@ function Update-TecharyModule {
 
         Write-Host "✅ Update complete."
     } else {
-        Write-Host "Module is up to date."
+        Write-Host "Module is up to date bro."
     }
 }
+
 #endregion
