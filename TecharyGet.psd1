@@ -24,7 +24,7 @@
     PowerShellVersion = '5.1'
 
     # Functions to export
-    FunctionsToExport = "Install-TecharyApp","Uninstall-TecharyApp","Help-TecharyApp","Get-TecharyAppList"
+    FunctionsToExport = "Install-TecharyApp","Uninstall-TecharyApp","Help-TecharyApp","Get-TecharyAppList","Update-TecharyGetModule"
 
     # Cmdlets to export
     CmdletsToExport   = @()
