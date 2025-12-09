@@ -100,9 +100,11 @@ The **Intune-Packager.ps1** allows the ease of creation of Intunewin files for I
 
 To use, download the **Intune-Packager.ps1** file, right-click and Run with Powershell, you will be given the below window.
 
+<img width="433" height="242" alt="image" src="https://github.com/user-attachments/assets/761c8b10-5fa9-463d-ae88-4889c1f33c7e" />
 
 Select your needed app on the drop-down, and click **Create IntuneWin Package**, this will create the Intunewin package in this location **"C:\IntuneApps\Output\<AppName>** *i.e. C:\IntuneApps\Output\adobereader*.
 
+<img width="433" height="241" alt="image" src="https://github.com/user-attachments/assets/6c29d3c2-a7c5-45e3-b2bf-efc4c2641325" />
 
 
 ## Notes
