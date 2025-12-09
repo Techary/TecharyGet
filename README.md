@@ -93,6 +93,18 @@ For custom apps that are not available in Winget are structured similar like thi
     ExeInstallArgs  = "--Silent"
 }
 ```
+
+## Intune Packager
+
+The **Intune-Packager.ps1** allows the ease of creation of Intunewin files for Intune upload and App deployment.
+
+To use, download the **Intune-Packager.ps1** file, right-click and Run with Powershell, you will be given the below window.
+
+
+Select your needed app on the drop-down, and click **Create IntuneWin Package**, this will create the Intunewin package in this location **"C:\IntuneApps\Output\<AppName>** *i.e. C:\IntuneApps\Output\adobereader*.
+
+
+
 ## Notes
 
 * The module detects CPU architecture and installs the correct version.
