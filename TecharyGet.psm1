@@ -266,11 +266,18 @@ function Install-TecharyWingetApp {
     $headers = @{ "User-Agent" = "PowerShell" }
     $response = Invoke-RestMethod -Uri $versionUrl -Headers $headers
 
-    $versions = $response | Where-Object { $_.type -eq "dir" } | ForEach-Object {
-        try { [version]$_.name } catch { $null }
-    } | Where-Object { $_ -ne $null }
+    $versions = $response |
+    Where-Object { $_.type -eq "dir" } |
+    ForEach-Object { $_.name } |
+    Where-Object { $_ -match '^\d+(\.\d+)*$' }
 
-    $latestVersion = $versions | Sort-Object -Descending | Select-Object -First 1
+    if (-not $versions) {
+    throw "[$AppName] No valid version folders found in repo path: $RepoPath"
+}
+
+    $latestVersion = $versions |
+    Sort-Object { [version]$_ } -Descending |
+    Select-Object -First 1
     Invoke-LogMessage "[$AppName] Latest version detected: $latestVersion"
 
     $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/$RepoPath/$latestVersion/$YamlFileName"
