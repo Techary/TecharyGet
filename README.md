@@ -109,7 +109,8 @@ Select your needed app on the drop-down, and click **Create IntuneWin Package**,
 
 For N-Able install you will see the parameters needed to create the Customer specific installer:
 
-<img width="445" height="392" alt="image" src="https://github.com/user-attachments/assets/138ca08e-7d2a-4d47-8681-618b06398240" />
+<img width="442" height="392" alt="image" src="https://github.com/user-attachments/assets/9fdc0551-b5b6-4c7d-95ad-a704041f51c5" />
+
 
 
 
