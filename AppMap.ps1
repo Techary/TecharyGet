@@ -71,6 +71,20 @@ $script:TecharyApps = @{
     }
 #endregion
 
+#region Winget Auto Update
+"wingetautoupdate" = @{
+        DisplayName     = "Winget Auto Update"
+        RepoPath        = "r/Romanitho/Winget-AutoUpdate"
+        YamlFile        = "Romanitho.Winget-AutoUpdate.installer.yaml"
+        PatternX64      = 'InstallerUrl:\s*(\S*/WAU\.msi)'
+        PatternARM64    = 'InstallerUrl:\s*(\S*/WAU\.msi)'
+        InstallerType   = "msi"
+        ExeInstallArgs  = "/S /PreventRebootRequired=true"
+        IsWinget        = $true
+        WingetID        = "Romanitho.Winget-AutoUpdate"
+    }
+#endregion
+
 #region Microsoft Visual Studio Code
 "vscode" = @{
     DisplayName     = "Microsoft Visual Studio Code"
