@@ -100,11 +100,18 @@ The **Intune-Packager.ps1** allows the ease of creation of Intunewin files for I
 
 To use, download the **Intune-Packager.ps1** file, right-click and Run with Powershell, you will be given the below window.
 
-<img width="433" height="242" alt="image" src="https://github.com/user-attachments/assets/761c8b10-5fa9-463d-ae88-4889c1f33c7e" />
+<img width="445" height="391" alt="image" src="https://github.com/user-attachments/assets/050337cc-a564-48c0-b985-19722a9ec5aa" />
+
 
 Select your needed app on the drop-down, and click **Create IntuneWin Package**, this will create the Intunewin package in this location **"C:\IntuneApps\Output\<AppName>** *i.e. C:\IntuneApps\Output\adobereader*.
 
-<img width="433" height="241" alt="image" src="https://github.com/user-attachments/assets/6c29d3c2-a7c5-45e3-b2bf-efc4c2641325" />
+<img width="441" height="391" alt="image" src="https://github.com/user-attachments/assets/8b8fec96-70be-422f-9d83-9fbba695853b" />
+
+For N-Able install you will see the parameters needed to create the Customer specific installer:
+
+<img width="442" height="392" alt="image" src="https://github.com/user-attachments/assets/9fdc0551-b5b6-4c7d-95ad-a704041f51c5" />
+
+
 
 
 ## Notes
