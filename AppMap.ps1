@@ -85,6 +85,19 @@ $script:TecharyApps = @{
     }
 #endregion
 
+#region RingCentral
+"ringcentral" = @{
+        DisplayName     = "RingCentral"
+        RepoPath        = "r/RingCentral/RingCentral"
+        YamlFile        = "RingCentral.RingCentral.installer.yaml"
+        PatternX64      = 'InstallerUrl:\s*(\S*/WAU\.msi)'
+        PatternARM64    = 'InstallerUrl:\s*(\S*/WAU\.msi)'
+        InstallerType   = "msi"
+        IsWinget        = $true
+        WingetID        = "RingCentral.RingCentral"
+    }
+#endregion
+
 #region Microsoft Visual Studio Code
 "vscode" = @{
     DisplayName     = "Microsoft Visual Studio Code"
