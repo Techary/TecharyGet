@@ -308,6 +308,20 @@ $script:TecharyApps = @{
 }
 #endregion
 
+#region Microsoft DotNet Runtime 10
+"microsoftdotnetruntime" = @{
+    DisplayName     = "Microsoft DotNet Runtime 10"
+    RepoPath        = "m/Microsoft/DotNet/Runtime/10"
+    YamlFile        = "Microsoft.DotNet.Runtime.10.installer.yaml"
+    PatternX64      = 'InstallerUrl:\s*(\S*/dotnet-runtime-\d+\.\d+\.\d+-win-x64\.exe)'
+    PatternARM64    = 'InstallerUrl:\s*(\S*/dotnet-runtime-\d+\.\d+\.\d+-win-arm64\.exe)'
+    InstallerType   = "exe"
+    ExeInstallArgs  = "/quiet"
+    IsWinget        = $true
+    WingetID        = "Microsoft.DotNet.Runtime.10"
+}
+#endregion
+
 #region PuTTy
 "putty" = @{
     DisplayName     = "PuTTy"
