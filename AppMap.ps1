@@ -307,6 +307,19 @@ $script:TecharyApps = @{
 }
 #endregion
 
+#region Go Programming Language
+"golang" = @{
+    DisplayName     = "Go Programming Language"
+    RepoPath        = "g/GoLang/Go"
+    YamlFile        = "GoLang.Go.installer.yaml"
+    PatternX64      = 'InstallerUrl:\s*(\S*/go\d+\.\d+\.\d+\.windows-amd64\.msi)'
+    PatternARM64    = 'InstallerUrl:\s*(\S*/go\d+\.\d+\.\d+\.windows-arm64\.msi)'
+    InstallerType   = "msi"
+    IsWinget        = $true
+    WingetID        = "GoLang.Go"
+}
+#endregion
+
 #region Cisco Webex
 "webex" = @{
     DisplayName     = "Cisco Webex"
