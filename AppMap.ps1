@@ -215,7 +215,7 @@ $script:TecharyApps = @{
         DisplayName     = "Pyhton 3.14"
         RepoPath        = "p/Python/Python/3/14"
         YamlFile        = "Python.Python.3.14.installer.yaml"
-        PatternX64      = 'InstallerUrl:\s*(\S*/python-\d+\.\d+\.\d+\.exe)'
+        PatternX64      = 'InstallerUrl:\s*(\S*/python-\d+\.\d+\.\d+-amd64\.exe)'
         PatternARM64    = 'InstallerUrl:\s*(\S*/python-\d+\.\d+\.\d+-arm64\.exe)'
         InstallerType   = "exe"
         ExeInstallArgs  = "/passive /quiet InstallAllUsers=1"
