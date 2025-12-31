@@ -218,7 +218,7 @@ $script:TecharyApps = @{
         PatternX64      = 'InstallerUrl:\s*(\S*/python-\d+\.\d+\.\d+\.exe)'
         PatternARM64    = 'InstallerUrl:\s*(\S*/python-\d+\.\d+\.\d+-arm64\.exe)'
         InstallerType   = "exe"
-        ExeInstallArgs  = "InstallAllUsers=1 PrependPath=1"
+        ExeInstallArgs  = "/passive /quiet InstallAllUsers=1"
         IsWinget        = $true
         WingetID        = "Python.Python.3.14"
     }
