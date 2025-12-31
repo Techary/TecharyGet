@@ -210,6 +210,20 @@ $script:TecharyApps = @{
 }
 #endregion
 
+#region Python 3.14
+"python314" = @{
+        DisplayName     = "Pyhton 3.14"
+        RepoPath        = "p/Python/Python/3/14"
+        YamlFile        = "Python.Python.3.14.installer.yaml"
+        PatternX64      = 'InstallerUrl:\s*(\S*/python-\d+\.\d+\.\d+\.exe)'
+        PatternARM64    = 'InstallerUrl:\s*(\S*/python-\d+\.\d+\.\d+-arm64\.exe)'
+        InstallerType   = "exe"
+        ExeInstallArgs  = "/verysilent /PrependPath=1 /InstallAllUsers=1"
+        IsWinget        = $true
+        WingetID        = "Python.Python.3.14"
+    }
+#endregion
+
 #region Java Runtime Environment
 "java" = @{
     DisplayName     = "Java Runtime Environment"
