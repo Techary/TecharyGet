@@ -224,6 +224,20 @@ $script:TecharyApps = @{
     }
 #endregion
 
+#region Docker Desktop
+"dockerdesktop" = @{
+        DisplayName     = "Docker Desktop"
+        RepoPath        = "d/Docker/DockerDesktop"
+        YamlFile        = "Docker.DockerDesktop.installer.yaml"
+        PatternX64      = 'InstallerUrl:\s*(\S*/amd64/\d+/Docker%20Desktop%20Installer\.exe)'
+        PatternARM64    = 'InstallerUrl:\s*(\S*/arm64/\d+/Docker%20Desktop%20Installer\.exe)'
+        InstallerType   = "exe"
+        ExeInstallArgs  = "install --quiet"
+        IsWinget        = $true
+        WingetID        = "Docker.DockerDesktop"
+    }
+#endregion
+
 #region Java Runtime Environment
 "java" = @{
     DisplayName     = "Java Runtime Environment"
