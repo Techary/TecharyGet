@@ -280,7 +280,7 @@ function Install-TecharyWingetApp {
     Select-Object -First 1
     Invoke-LogMessage "[$AppName] Latest version detected: $latestVersion"
 
-    $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/$RepoPath/$latestVersion/$YamlFileName"
+    $yamlUrl = "https://raw.githubusercontent.com/microsoft/winget-pkgs/refs/heads/master/manifests/$RepoPath/$latestVersion/$YamlFileName"
     Invoke-LogMessage "[$AppName] YAML URL: $yamlUrl"
 
     try {
