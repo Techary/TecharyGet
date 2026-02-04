@@ -1,0 +1,23 @@
+[
+    {
+        "Id": "MyDPD",
+        "Url": "https://apis.my.dpd.co.uk/apps/download/public",
+        "SilentArgs": "--Silent",
+        "InstallerType": "exe",
+        "DisplayName": "MyDPD"
+    },
+    {
+        "Id": "RoyalMail",
+        "Url": "http://app.printnode.com/download/client/royalmail/windows",
+        "SilentArgs": "/VERYSILENT /SUPPRESSMSGBOXES",
+        "InstallerType": "exe",
+        "DisplayName": "Royal Mail"
+    },
+    {
+        "Id": "Crosschex",
+        "Url": "https://www.anviz.com/file/download/5539/CrossChex_Standard_4.3.16.exe",
+        "SilentArgs": "/exenoui ALLUSERS=1 /qn",
+        "InstallerType": "exe",
+        "DisplayName": "Crosschex"
+    }
+]
