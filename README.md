@@ -1,143 +1,175 @@
-<img width="1536" height="1024" alt="ChatGPT Image Oct 30, 2025, 09_09_28 AM" src="https://github.com/user-attachments/assets/fb7f9529-9ab6-4f86-a33f-bcfce081be86" />
+Here is a professional, comprehensive `README.md` file for your module. It covers all the advanced features we built (Cloud Catalog, Intune Packaging, Smart Uninstall, etc.).
 
-# TecharyGet PowerShell Module
+You can copy-paste this directly into the root of your project.
 
-> **Author:** Adam Sweetapple
+---
 
-> **Purpose:** Install and uninstall software using custom Winget logic and external installer definitions (including EXE, MSI, ZIP, MSIX).
+```markdown
+# TecharyGet
 
-## Features
+**TecharyGet** is an enterprise-grade PowerShell module designed for modern software deployment. It bridges the gap between ad-hoc installations and formal Intune packaging, allowing IT Admins to deploy the latest versions of software dynamically without maintaining massive local repositories.
 
-* Installs apps from Winget using GitHub-hosted YAMLs
+## 🚀 Key Features
 
-* Supports MSI, EXE, ZIP, and MSIX installers
+* **Smart Installation:** Automatically fetches the latest version of apps from GitHub (WinGet Manifests) or your Private Cloud Catalog.
+* **Architecture Detection:** Automatically selects the correct installer (x64, x86, ARM64) for the target machine.
+* **Enterprise Logging:** Writes detailed logs to both `C:\ProgramData\TecharyGet\InstallLogs.log` and the **Windows Event Log** (Source: `TecharyGet`) for RMM monitoring.
+* **Intune Packaging:** Instantly generates `.intunewin` files with "Thin" scripts that trigger installs dynamically.
+* **Smart Uninstall:** Removes apps by searching Registry (MSI/EXE), Modern Apps (MSIX), and Custom Display Names.
+* **Private Catalog:** Supports a cloud-hosted `CustomApps.json` (e.g., GitHub Raw) for proprietary apps not found in public repos.
 
-* Custom app support with static URLs and parameters (e.g. N-Able, myDPD)
+---
 
-* Works with Intune deployments and SYSTEM-level context
+## 📦 Installation
 
-* Full uninstall logic via Winget or Registry fallback
+1.  Copy the `TecharyGet` folder to your PowerShell Modules directory:
+    * `C:\Program Files\WindowsPowerShell\Modules\`
+2.  Import the module:
+    ```powershell
+    Import-Module TecharyGet -Force
+    ```
 
-* Architecture-aware (x64, ARM64)
+---
 
-## Available Commands
-**Install an App**
-```Powershell
-Install-TecharyApp -AppName "7zip"
+## 🛠️ Usage Examples
+
+### 1. Installing Applications
+The `Install-SmartApp` command is the primary workhorse. It attempts to find the app in the public GitHub repo first, then falls back to your Private Catalog.
+
+```powershell
+# Install a standard app (Latest Version)
+Install-SmartApp -Id "7zip.7zip"
+
+# Install a specific ID from your private catalog
+Install-SmartApp -Id "MyDPD"
+
+# Install a complex app (e.g. Dell Command Update) - Handles Exit Code 4 automatically
+Install-SmartApp -Id "Dell.CommandUpdate"
+
 ```
 
-**Install with Parameters (e.g. N-Able)**
-```Powershell
-Install-TecharyApp -AppName "nable" -Parameters @{
-    CustomerID    = "123"
-    Token         = "abcdef-12345"
-    CustomerName  = '\"customer name\"'
-    ServerAddress = "nable.serveraddress.com"
-}
-```
-**Update TecharyGet Module**
+### 2. Uninstalling Applications
 
-To get the latest TecharyGet Module, please run the following:
-```Powershell
-Update-TecharyGetModule
-```
-**Uninstall an App**
-```Powershell
-Uninstall-TecharyApp -AppName "bitwarden"
-```
-**List All Supported Apps**
-```Powershell
-Get-TecharyAppList
+The uninstaller intelligently searches the Registry (HKLM/HKCU) and Appx packages.
+
+```powershell
+# Uninstall by Display Name
+Uninstall-SmartApp -Name "Google Chrome"
+
+# Uninstall using a Custom ID (looks up real name in JSON)
+Uninstall-SmartApp -Name "MyDPD"
+
+# Test run (Safe Mode)
+Uninstall-SmartApp -Name "Windows365" -WhatIf
+
 ```
 
-🔧 Example Output of Get-TecharyAppList
-| AppKey | DisplayName | InstallerType | IsWinget | WingetID |
-|  ----- |  ---------- | ------------- | -------- | -------- |
-| 7zip   |	7Zip       | exe           | true     | 7zip.7zip |
-| bitwarden | Bitwarden | exe | true | Bitwarden.Bitwarden |
-| vscode | Microsoft Visual Studio Code | exe | true | Microsoft.VisualStudioCode |
-| nable | N-Able RMM | exe | false | (custom) |
-| powerbi | Microsoft Power BI | exe | true | Microsoft.PowerBI |
+### 3. Creating Intune Packages
 
-**Show Help**
-```Powershell
-Help-TecharyApp
+You can generate ready-to-upload `.intunewin` files that contain "Thin" scripts (One-Liners). These scripts assume `TecharyGet` is installed on the target machine and trigger a live download/install.
+
+**GUI Method:**
+
+```powershell
+New-IntunePackageUI
+
 ```
 
-## AppMap Configuration
+**CLI Method:**
 
-Apps are defined in a separate file, AppMap.ps1, hosted in the GitHub Repository.
+```powershell
+New-IntunePackage -Id "Dell.CommandUpdate" -OutputFolder "C:\IntunePackages"
 
-The following structure lists the available Winget apps:
-``` Powershell
-"bitwarden" = @{
-    DisplayName     = "Bitwarden"
-    RepoPath        = "b/Bitwarden/Bitwarden"
-    YamlFile        = "Bitwarden.Bitwarden.installer.yaml"
-    PatternX64      = 'InstallerUrl:\s*(\S*/Bitwarden-Installer-\S+\.exe)'
-    PatternARM64    = 'InstallerUrl:\s*(\S*/Bitwarden-Installer-\S+\.exe)'
-    InstallerType   = "exe"
-    ExeInstallArgs  = "/allusers /S"
-    IsWinget        = $true
-    WingetID        = "Bitwarden.Bitwarden"
-}
 ```
 
-For custom apps that are not available in Winget are structured similar like this:
-```Powershell
-"mydpd" = @{
-    DisplayName     = "MyDPD Customer"
-    IsWinget        = $false
-    DownloadUrl     = "https://apis.my.dpd.co.uk/apps/download/public"
-    InstallerType   = "exe"
-    ExeInstallArgs  = "--Silent"
-}
+* **Install Command:** `powershell.exe -ExecutionPolicy Bypass -File Install.ps1`
+* **Uninstall Command:** `powershell.exe -ExecutionPolicy Bypass -File Uninstall.ps1`
+
+### 4. Special N-able Agent Deployment
+
+N-able requires dynamic parameters (Token, CustomerID). Use the dedicated function:
+
+```powershell
+Install-NableAgent -CustomerID "123" `
+                   -Token "abc-123-xyz" `
+                   -CustomerName "ClientA" `
+                   -ServerAddress "rmm.example.com"
+
 ```
 
-## Intune Packager
+---
 
-The **Intune-Packager.ps1** allows the ease of creation of Intunewin files for Intune upload and App deployment.
+## ☁️ Private Catalog Configuration
 
-To use, download the **Intune-Packager.ps1** file, right-click and Run with Powershell, you will be given the below window.
+For apps that are not in the public WinGet repo (e.g., licensed software, internal tools), use the **Private Catalog**.
 
-<img width="445" height="391" alt="image" src="https://github.com/user-attachments/assets/050337cc-a564-48c0-b985-19722a9ec5aa" />
+### 1. The JSON Structure
+
+Create a `CustomApps.json` file:
+
+```json
+[
+  {
+    "Id": "MyDPD",
+    "Url": "[https://www.mydpd.co.uk/downloads/MyDPD_Installer.exe](https://www.mydpd.co.uk/downloads/MyDPD_Installer.exe)",
+    "SilentArgs": "/S /v/qn",
+    "InstallerType": "exe",
+    "DisplayName": "MyDPD Desktop Client"
+  },
+  {
+    "Id": "InternalTool",
+    "Url": "[https://storage.mycompany.com/tools/internal.msi](https://storage.mycompany.com/tools/internal.msi)",
+    "SilentArgs": "/qb",
+    "InstallerType": "msi",
+    "DisplayName": "Techary Internal Tool v2"
+  }
+]
+
+```
+
+### 2. Hosting (Cloud Sync)
+
+Host this file on a raw URL (e.g., GitHub Raw, Azure Blob). The module automatically caches this file locally and syncs it every 60 minutes.
+
+**To configure the URL:**
+Edit `Private\Get-CustomApp.ps1` and update the `$CloudUrl` variable:
+
+```powershell
+$CloudUrl = "[https://raw.githubusercontent.com/Techary/TecharyGet/BETA/TecharyGet/Private/CustomApps.json](https://raw.githubusercontent.com/Techary/TecharyGet/BETA/TecharyGet/Private/CustomApps.json)"
+
+```
+
+---
+
+## 🔍 Logging & Telemetry
+
+The module provides full observability for RMM tools (N-able, Datto, NinjaOne).
+
+* **Log File:** `C:\ProgramData\TecharyGet\InstallLogs.log`
+* **Event Log:** Windows Logs -> Application
+* **Source:** `TecharyGet`
+* **Event IDs:**
+* `100`: Information (Started, Success)
+* `200`: Warning (Reboot Required, Retry)
+* `300`: Error (Download Failed, Install Failed)
 
 
-Select your needed app on the drop-down, and click **Create IntuneWin Package**, this will create the Intunewin package in this location **"C:\IntuneApps\Output\<AppName>** *i.e. C:\IntuneApps\Output\adobereader*.
-
-<img width="441" height="391" alt="image" src="https://github.com/user-attachments/assets/8b8fec96-70be-422f-9d83-9fbba695853b" />
-
-For N-Able install you will see the parameters needed to create the Customer specific installer:
-
-<img width="442" height="392" alt="image" src="https://github.com/user-attachments/assets/9fdc0551-b5b6-4c7d-95ad-a704041f51c5" />
 
 
 
+---
 
-## Notes
+## ⚠️ Troubleshooting
 
-* The module detects CPU architecture and installs the correct version.
+**"Access Denied" on Download:**
+The module uses User-Agent spoofing (Chrome/120) to bypass Akamai/Vendor blocks (e.g., Dell, Adobe).
 
-* All downloads are logged to C:\Logs\TecharyGetLogs\TecharyGet.log
+**Exit Code 4 (Dell):**
+The module treats Exit Code `4` as "Success (Reboot Required)" specifically for Dell installers, preventing false failure reports.
 
-* Apps not in Winget can be defined with a static DownloadUrl and installed with logic from the module.
+**"WindowsApp" Uninstall Failures:**
+Store Apps often have internal names different from their display names. Use `Get-StartApps` to find the internal ID (e.g., `MicrosoftCorporationII.Windows365`).
 
-* You can run winget.exe directly (e.g. for SYSTEM context via Intune) using its resolved path in C:\Program Files\WindowsApps\...
+```
 
-* Hosting the AppMap.ps1 file means that we can manage all app installs from a centralised location for ALL of out customers.
-
-## 🧪 Tested With
-
-* Intune deployments (System context)
-
-* Windows 10/11 x64 + ARM64
-
-* PowerShell 5.1 and 7+
-
-## Troubleshooting
-
-* ❗ App not found? → Make sure it's defined in AppMap.ps1
-
-* ❗ Duplicate key error? → Ensure there are no repeated properties in app maps (like IsWinget or WingetID)
-
-* ❗ Winget not running in SYSTEM? → Use the direct winget.exe path resolution
+```
