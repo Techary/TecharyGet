@@ -17,11 +17,6 @@
 
 1.  Copy the `TecharyGet` folder to your PowerShell Modules directory:
     * `C:\Program Files\WindowsPowerShell\Modules\`
-2.  Import the module:
-    ```powershell
-    Import-Module TecharyGet -Force
-    ```
-
 ---
 
 ## 🛠️ Usage Examples
@@ -35,6 +30,3 @@ Install-SmartApp -Id "7zip.7zip"
 
 # Install a specific ID from your private catalog
 Install-SmartApp -Id "MyDPD"
-
-# Install a complex app (e.g. Dell Command Update) - Handles Exit Code 4 automatically
-Install-SmartApp -Id "Dell.CommandUpdate"
