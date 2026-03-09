@@ -1,6 +1,6 @@
 $ProgressPreference = 'SilentlyContinue'
 
-function Install-SmartApp {
+function Install-TecharyApp {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
@@ -65,4 +65,5 @@ function Install-SmartApp {
     
     Install-AppPackage -Name $Pkg.Name -FilePath $Pkg.InstallerPath -Arguments $Args
     Invoke-PackagerCleanup -Paths "$env:TEMP\AppPackager" -Force
+
 }
