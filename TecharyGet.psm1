@@ -218,7 +218,7 @@ function Install-TecharyApp {
             switch ($app.InstallerType) {
                 "exe" { Start-Process -FilePath $installerPath -ArgumentList $app.ExeInstallArgs -Wait -NoNewWindow }
                 "msi" { Start-Process "msiexec.exe" -ArgumentList "/i `"$installerPath`" $($app.MsiInstallArgs)" -Wait -NoNewWindow }
-                "msix"{ Add-AppxProvisionedPackage -Online -PackagePath $installerPath -SkipLicense }
+                "msix"{ Add-AppxProvisionedPackage -Online -PackagePath $installerPath -SkipLicense -Regions "all"}
             }
 
             Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
