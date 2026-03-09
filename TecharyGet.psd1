@@ -3,7 +3,7 @@
     RootModule = 'TecharyGet.psm1'
 
     # Version number of this module.
-    ModuleVersion = '0.1'
+    ModuleVersion = '2.0'
 
     # ID used to uniquely identify this module
     GUID = 'e9c840c8-3c3e-4246-8178-52372d807654'
@@ -99,3 +99,4 @@
     # Format files (.ps1xml) to be loaded when importing this module
     # FormatsToProcess = @()
 }
+
