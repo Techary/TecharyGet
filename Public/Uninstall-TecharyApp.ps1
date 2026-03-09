@@ -1,4 +1,4 @@
-function Uninstall-SmartApp {
+function Uninstall-TecharyApp {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true)]
@@ -108,4 +108,5 @@ function Uninstall-SmartApp {
     catch {
         Write-PackagerLog -Message "Uninstallation Failed: $_" -Severity Error
     }
+
 }
