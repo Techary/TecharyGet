@@ -60,10 +60,11 @@ function Install-TecharyApp {
     # MSI Fallback Logic
     $Args = $Pkg.SilentArgs
     if ([string]::IsNullOrWhiteSpace($Args) -and ($Pkg.InstallerPath -match ".msi$" -or $Pkg.InstallerType -eq "msi")) {
-        $Args = "/qb /norestart"
+        $Args = "ALLUSERS=1 /quiet /norestart"
     }
     
     Install-AppPackage -Name $Pkg.Name -FilePath $Pkg.InstallerPath -Arguments $Args
     Invoke-PackagerCleanup -Paths "$env:TEMP\AppPackager" -Force
 
 }
+
