@@ -29,6 +29,20 @@ $script:TecharyApps = @{
     }
 #endregion
 
+#region Claude
+"claude" = @{
+        DisplayName     = "Claude"
+        RepoPath        = "a/Anthropic/Claude"
+        YamlFile        = "Anthropic.Claude.installer.yaml"
+        PatternX64      = 'InstallerUrl:\s*(\S*/x64/\d+\.\d+\.\d+/Claude-[a-f0-9]+\.exe)'
+        PatternARM64    = 'InstallerUrl:\s*(\S*/arm64/\d+\.\d+\.\d+/Claude-[a-f0-9]+\.exe)'
+        InstallerType   = "exe"
+        ExeInstallArgs  = "--silent"
+        IsWinget        = $true
+        WingetID        = "Anthropic.Claude"
+    }
+#endregion
+
 #region Microsoft PowerToys
 "powertoys" = @{
     DisplayName     = "PowerToys"
@@ -587,3 +601,4 @@ $script:TecharyApps = @{
 
 
 }
+
