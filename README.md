@@ -22,11 +22,11 @@
 ## 🛠️ Usage Examples
 
 ### 1. Installing Applications
-The `Install-SmartApp` command is the primary workhorse. It attempts to find the app in the public GitHub repo first, then falls back to your Private Catalog.
+The `Install-TecharyApp` command is the primary workhorse. It attempts to find the app in the public GitHub repo first, then falls back to your Private Catalog.
 
 ```powershell
 # Install a standard app (Latest Version)
-Install-SmartApp -Id "7zip.7zip"
+Install-TecharyApp -Id "7zip.7zip"
 
 # Install a specific ID from your private catalog
-Install-SmartApp -Id "MyDPD"
+Install-TecharyApp -Id "MyDPD"
