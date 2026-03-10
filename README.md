@@ -30,3 +30,13 @@ Install-TecharyApp -Id "7zip.7zip"
 
 # Install a specific ID from your private catalog
 Install-TecharyApp -Id "MyDPD"
+```
+
+For the Nable Agent; it is slightly different, below is a example
+
+```powershell
+Install-NableAgent `
+    -CustomerID "<Customer ID>" `
+    -Token "<Token>" `
+    -ServerAddress "<N_Central Server Address>"
+```
