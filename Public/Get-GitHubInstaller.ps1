@@ -91,6 +91,9 @@ function Get-GitHubInstaller {
         # Special Override for 8x8 Work MSI
         if ($Id -eq "8x8.Work") { $SelectedArgs = "/qn /norestart" }
 
+        # Special Override for Sublime Text 4
+        if ($Id -eq "SublimeHQ.SublimeText.4") { $SelectedArgs = "/VERYSILENT /NORESTART" }
+
         # --- DOWNLOAD ---
         $UriObj = [System.Uri]$SelectedUrl
         $RealExtension = [System.IO.Path]::GetExtension($UriObj.LocalPath).ToLower()
@@ -117,5 +120,4 @@ function Get-GitHubInstaller {
         Write-PackagerLog -Message "GitHub Scraping Failed: $_" -Severity Error
         throw $_
     }
-
 }
