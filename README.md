@@ -5,6 +5,7 @@
 ## 🚀 Key Features
 
 * **Smart Installation:** Automatically fetches the latest version of apps from GitHub (WinGet Manifests) or your Private Cloud Catalog.
+* **App ID:** The app name for installation is the Winget ID which can either be found using **Winget Search <Appname>** or via the Winget PKGs repo.
 * **Architecture Detection:** Automatically selects the correct installer (x64, x86, ARM64) for the target machine.
 * **Enterprise Logging:** Writes detailed logs to both `C:\ProgramData\TecharyGet\InstallLogs.log` and the **Windows Event Log** (Source: `TecharyGet`) for RMM monitoring.
 * **Intune Packaging:** Instantly generates `.intunewin` files with "Thin" scripts that trigger installs dynamically.
