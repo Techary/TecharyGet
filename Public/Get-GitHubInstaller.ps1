@@ -88,6 +88,9 @@ function Get-GitHubInstaller {
         # Special Override for Dell (Command Update)
         if ($Id -eq "Dell.CommandUpdate") { $SelectedArgs = '/s /l="C:\Windows\Temp\DellCommand.log" /v"/qn"' }
 
+        # Special Override for 8x8 Work MSI
+        if ($Id -eq "8x8.Work") { $SelectedArgs = "/qn /norestart" }
+
         # --- DOWNLOAD ---
         $UriObj = [System.Uri]$SelectedUrl
         $RealExtension = [System.IO.Path]::GetExtension($UriObj.LocalPath).ToLower()
@@ -114,4 +117,5 @@ function Get-GitHubInstaller {
         Write-PackagerLog -Message "GitHub Scraping Failed: $_" -Severity Error
         throw $_
     }
+
 }
