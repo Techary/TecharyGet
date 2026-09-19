@@ -1,51 +1,103 @@
 @{
-    # Script module file associated with this manifest
-    RootModule        = 'TecharyGet.psm1'
+    # Script module or binary module file associated with this manifest.
+    RootModule = 'TecharyGet.psm1'
 
-    # Version of this module
-    ModuleVersion     = '2.4'
+    # Version number of this module.
+    ModuleVersion = '2.4'
 
     # ID used to uniquely identify this module
-    GUID              = '8d777e7e-fd28-4e34-bf9d-0c325bb81a76'
+    GUID = 'e9c840c8-3c3e-4246-8178-52372d807654'
 
     # Author of this module
-    Author            = 'Adam Sweetapple'
+    Author = 'Adam Sweetapple'
 
     # Company or vendor of this module
-    CompanyName       = 'Techary'
+    CompanyName = 'Techary'
 
-    # Copyright
-    Copyright         = '(c) 2026 Techary. All rights reserved.'
+    # Copyright statement for this module
+    Copyright = '(c) 2026 Techary. All rights reserved.'
 
-    # Description of the module
-    Description       = 'A PowerShell module for managing app installations and uninstalls using Winget Repo, MSI, EXE, ZIP, and MSIX sources. Supports custom logic and Intune deployment.'
+    # Description of the functionality provided by this module
+    Description = 'A PowerShell module for managing app installations and uninstalls using Winget Repo, MSI, EXE, ZIP, and MSIX sources. Supports custom logic and Intune deployment.'
 
-    # Minimum version of PowerShell required
-    PowerShellVersion = '5.1'
+    # Functions to export from this module, for best performance, do not use wildcards.
+    FunctionsToExport = @(
+        # -- Core Installation --
+        'Install-TecharyApp',
+        'Uninstall-TecharyApp',
+        'Test-TecharyApp',       # The new Detection Logic
+        
+        # -- Specific Installers --
+        'Install-NableAgent',  # The custom RMM installer
+        'Get-GitHubInstaller', # Useful for manual manifest checking
 
-    # Functions to export
-    FunctionsToExport = "Install-TecharyApp","Uninstall-TecharyApp","Help-TecharyApp","Get-TecharyAppList","Update-TecharyGetModule"
+        # -- Intune Packaging Tools --
+        'New-IntunePackage',   # The CLI Packager (with Detect/Uninstall generation)
+        'New-IntunePackageUI', # The GUI Packager
 
-    # Cmdlets to export
-    CmdletsToExport   = @()
+        # -- Utilities --
+        'Write-PackagerLog'
+    )
 
-    # Variables to export
-    VariablesToExport = @()
+    # Cmdlets to export from this module
+    CmdletsToExport = @()
 
-    # Aliases to export
-    AliasesToExport   = @()
+    # Variables to export from this module
+    VariablesToExport = '*'
 
-    # Private data to pass to PowerShell
-    PrivateData       = @{
+    # Aliases to export from this module
+    AliasesToExport = @()
 
+    # List of all modules packaged with this module
+    # NestedModules = @()
+
+    # List of all files packaged with this module
+    # FileList = @()
+
+    # Private data to pass to the module specified in RootModule/ModuleToProcess
+    PrivateData = @{
         PSData = @{
-            Tags = @('winget', 'installer', 'automation', 'techary', 'uninstall', 'intune')
-            ProjectUri = 'https://github.com/Techary/TecharyGet'
+            # Tags applied to this module. These help with module discovery in online galleries.
+            Tags = @('Intune', 'PackageManagement', 'Install', 'Uninstall', 'Winget', 'RMM', 'Automation')
+            
+            # A URL to the license for this module.
+            # LicenseUri = ''
+
+            # A URL to the main website for this project.
+            # ProjectUri = ''
+
+            # A URL to an icon representing this module.
+            # IconUri = ''
+
+            # ReleaseNotes of this module
+            # ReleaseNotes = ''
         }
     }
+
+    # Minimum version of the Windows PowerShell engine required by this module
+    PowerShellVersion = '5.1'
+
+    # Minimum version of the Common Language Runtime (CLR) required by this module
+    # CLRVersion = ''
+
+    # Processor architecture (None, X86, Amd64) required by this module
+    # ProcessorArchitecture = ''
+
+    # Modules that must be imported into the global environment prior to importing this module
+    # RequiredModules = @()
+
+    # Assemblies that must be loaded prior to importing this module
+    # RequiredAssemblies = @()
+
+    # Script files (.ps1) that are run in the caller's environment prior to importing this module.
+    # ScriptsToProcess = @()
+
+    # Type files (.ps1xml) to be loaded when importing this module
+    # TypesToProcess = @()
+
+    # Format files (.ps1xml) to be loaded when importing this module
+    # FormatsToProcess = @()
 }
-
-
 
 
 

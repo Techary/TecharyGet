@@ -1,0 +1,127 @@
+name: Build manifest index
+
+on:
+  schedule:
+    # Nightly. NOTE: GitHub only runs scheduled workflows from the repository's
+    # DEFAULT branch, so this fires once the workflow exists on that branch.
+    # Push and manual dispatch work from any branch.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Index/Catalog.json'
+      - 'Build/Build-ManifestIndex.ps1'
+      - 'Private/Resolve-GitHubManifest.ps1'
+      - '.github/workflows/build-manifest-index.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manifest-index
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ---------------------------------------------------------------
+      # Detection index: EVERY package in the winget source, not just the
+      # curated catalogue. Built from Microsoft's own published source
+      # index, which already carries the ARP product codes and MSIX package
+      # family names that detection matches on. One 3.5 MB CDN download, no
+      # api.github.com calls, no clone of winget-pkgs.
+      # ---------------------------------------------------------------
+      - name: Build detection index from the winget source
+        run: |
+          set -euo pipefail
+          curl -sSL --retry 3 --max-time 300 \
+            -o source2.msix https://cdn.winget.microsoft.com/cache/source2.msix
+          ls -l source2.msix
+
+          unzip -o -q source2.msix -d wingetsrc
+          DB=wingetsrc/Public/index.db
+          test -f "$DB"
+
+          # One row per identifier rather than a delimited list. Any separator
+          # has to be a character that cannot appear inside a product code, and
+          # the obvious safe choice is a control character, which is not legal
+          # in a YAML workflow file. Emitting pairs and grouping in jq avoids
+          # the question entirely.
+          #
+          # Every package gets an entry, including those with neither a product
+          # code nor a package family name. Those cannot be matched by code,
+          # but the entry still carries the canonical display name, and that is
+          # what bridges an ID to its ARP entry: "Valve.Steam" never matches
+          # "Steam" on its own. A name-only row costs about 80 bytes.
+          sqlite3 "$DB" -json "
+            SELECT p.id AS Id, p.name AS Name, p.latest_version AS Version,
+                   'P' AS Kind, c.productcode AS Value
+            FROM packages p JOIN productcodes2 c ON c.package = p.rowid
+            UNION ALL
+            SELECT p.id, p.name, p.latest_version,
+                   'F', f.pfn
+            FROM packages p JOIN pfns2 f ON f.package = p.rowid
+            UNION ALL
+            SELECT p.id, p.name, p.latest_version,
+                   'N', NULL
+            FROM packages p
+            WHERE NOT EXISTS (SELECT 1 FROM productcodes2 WHERE package = p.rowid)
+              AND NOT EXISTS (SELECT 1 FROM pfns2 WHERE package = p.rowid)
+            ORDER BY 1;" > pairs.json
+
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq --arg now "$NOW" '
+            group_by(.Id)
+            | map({
+                key: .[0].Id,
+                value: {
+                  Name: .[0].Name,
+                  Version: .[0].Version,
+                  ProductCodes: [ .[] | select(.Kind == "P") | .Value ],
+                  Pfns:         [ .[] | select(.Kind == "F") | .Value ]
+                }})
+            | from_entries
+            | { Generated: $now,
+                Source: "winget source2 index",
+                PackageCount: length,
+                Packages: . }
+          ' pairs.json > Index/Detection.json
+
+          echo "detection index: $(jq -r .PackageCount Index/Detection.json) packages, $(du -h Index/Detection.json | cut -f1)"
+
+      # ---------------------------------------------------------------
+      # Curated index: full install metadata (installer URL, silent args) for
+      # the packages in Index/Catalog.json, so a common install needs no API
+      # call either. Anything not listed still installs, resolved live.
+      # ---------------------------------------------------------------
+      - name: Resolve curated manifests
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./Build/Build-ManifestIndex.ps1 -CatalogPath Index/Catalog.json -OutputPath Index/Manifests.json
+
+      - name: Publish to the manifest-index branch
+        run: |
+          set -euo pipefail
+          cp Index/Manifests.json "$RUNNER_TEMP/Manifests.json"
+          cp Index/Detection.json "$RUNNER_TEMP/Detection.json"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Orphan + force-push keeps exactly one commit on the branch, so a
+          # nightly refresh never grows the repository or touches code history.
+          git checkout --orphan manifest-index
+          git rm -rf . -q
+          cp "$RUNNER_TEMP/Manifests.json" Manifests.json
+          cp "$RUNNER_TEMP/Detection.json" Detection.json
+          git add Manifests.json Detection.json
+          git commit -q -m "Refresh manifest index ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
+          git push -f origin manifest-index
+
+          echo "Published to https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/manifest-index/"
