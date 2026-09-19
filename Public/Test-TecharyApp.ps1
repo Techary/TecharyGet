@@ -87,13 +87,31 @@ function Test-TecharyApp {
         } catch {}
     }
 
-    foreach ($Code in $ProductCodes) {
+    if ($ProductCodes.Count -gt 0) {
+        # Enumerate the machine's uninstall key NAMES once and hash-look-up each
+        # candidate, rather than probing the registry per code.
+        #
+        # The winget source carries every product code a package has ever
+        # shipped: Mozilla.Firefox alone has 5205, one per locale and version.
+        # Probing those across three hives is 15,615 registry reads and took
+        # ~384 seconds measured, which would exceed an N-central scan interval
+        # on its own. This is ~230 reads regardless of how many codes a package
+        # has. Ordinal-ignore-case because the index stores codes normalised to
+        # lower case ("7-zip") while the real key is "7-Zip", and the registry
+        # itself is case-insensitive.
+        $ArpKeys = New-Object 'System.Collections.Generic.Dictionary[string,string]' ([StringComparer]::OrdinalIgnoreCase)
         foreach ($Hive in $Hives) {
-            $Key = Join-Path $Hive $Code
-            if (Test-Path $Key) {
-                $Item = Get-ItemProperty -Path $Key -ErrorAction SilentlyContinue
-                Write-Verbose "Matched on ProductCode '$Code' at $Key"
-                $R = New-Result $true 'ProductCode' $Item.DisplayName $Item.DisplayVersion $Key
+            foreach ($Key in (Get-ChildItem -Path $Hive -ErrorAction SilentlyContinue)) {
+                if (-not $ArpKeys.ContainsKey($Key.PSChildName)) { $ArpKeys[$Key.PSChildName] = $Key.PSPath }
+            }
+        }
+
+        foreach ($Code in $ProductCodes) {
+            $Path = $null
+            if ($ArpKeys.TryGetValue($Code, [ref]$Path)) {
+                $Item = Get-ItemProperty -Path $Path -ErrorAction SilentlyContinue
+                Write-Verbose "Matched on ProductCode '$Code' at $Path"
+                $R = New-Result $true 'ProductCode' $Item.DisplayName $Item.DisplayVersion $Path
                 if ($Detailed) { return $R } else { return $true }
             }
         }
