@@ -17,15 +17,20 @@ function Get-ManifestIndex {
     $CacheDir  = "$env:ProgramData\TecharyGet"
     $CachePath = Join-Path $CacheDir 'ManifestIndex.json'
 
+    $HaveCache = Test-Path $CachePath
+
     try {
         if (-not (Test-Path $CacheDir)) { New-Item -ItemType Directory -Path $CacheDir -Force -ErrorAction Stop | Out-Null }
 
-        # Detection runs on a schedule on every endpoint, so it must never make
-        # a network call. -NoRefresh reads whatever is already cached.
-        $NeedUpdate = -not $NoRefresh
-        if (-not $Force -and (Test-Path $CachePath)) {
+        # -NoRefresh means "do not re-download a copy we already have", NOT
+        # "never download". An endpoint that only ever runs detection installs
+        # nothing, so nothing else would ever fetch the index for it: treating
+        # NoRefresh as "never download" left those machines permanently without
+        # one, and ProductCode detection could never work there.
+        $NeedUpdate = $true
+        if ($HaveCache -and -not $Force) {
             $Age = (Get-Date) - (Get-Item $CachePath).LastWriteTime
-            if ($Age.TotalHours -lt $CacheHours) { $NeedUpdate = $false }
+            if ($NoRefresh -or $Age.TotalHours -lt $CacheHours) { $NeedUpdate = $false }
         }
 
         if ($NeedUpdate) {
