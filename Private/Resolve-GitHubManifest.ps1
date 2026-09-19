@@ -37,7 +37,12 @@ function Resolve-GitHubManifest {
     param (
         [Parameter(Mandatory=$true)][string]$Id,
         [Parameter(Mandatory=$true)][string]$SysArch,
-        [Parameter(Mandatory=$true)][hashtable]$Headers
+        [Parameter(Mandatory=$true)][hashtable]$Headers,
+
+        # winget's own latest_version for this package, from the detection
+        # index. Authoritative, so it skips the directory listing entirely -
+        # which is both correct and one fewer API call.
+        [string]$KnownVersion
     )
 
     # 2. Construct API Path
@@ -45,24 +50,55 @@ function Resolve-GitHubManifest {
     $FirstChar = $Id.Substring(0,1).ToLower()
     $BaseApi = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/$FirstChar/$IdPath"
 
-    # 3. Get Version (Latest)  [API call 1 of 2]
-    $VersionsResponse = Invoke-RestMethod -Uri $BaseApi -Method Get -Headers $Headers -ErrorAction Stop
+    # 3. Candidate version folders, best first.
+    #
+    # A package folder can contain entries that are not versions at all. Some
+    # are architectures or channels (Discord carries x86, arm64, Canary, PTB).
+    # Worse, some are nested PACKAGE namespaces that look exactly like a
+    # version: manifests/m/Microsoft/Office contains "2010", which is the
+    # Microsoft.Office.2010.* family, not a release. Sorting numerically put
+    # 2010 above 16.0.20228.20124, resolution then looked for an installer
+    # manifest inside it and threw, and Install-TecharyApp reported
+    # "not found in GitHub OR Custom Catalog" for an app that is published.
+    #
+    # So a folder is only a version if it actually contains an installer
+    # manifest. Walk the candidates until one does.
+    $Candidates = @()
 
-    $LatestVersionObj = $VersionsResponse |
-        Where-Object { $_.type -eq "dir" } |
-        Select-Object *, @{N='SortKey'; E={ Get-ManifestVersionKey -Name $_.name }} |
-        Where-Object { $null -ne $_.SortKey } |
-        Sort-Object SortKey -Descending |
-        Select-Object -First 1
+    if ($KnownVersion) {
+        $Candidates += $KnownVersion
+    }
+    else {
+        $VersionsResponse = Invoke-RestMethod -Uri $BaseApi -Method Get -Headers $Headers -ErrorAction Stop
+        $Candidates = @($VersionsResponse |
+            Where-Object { $_.type -eq "dir" } |
+            Select-Object *, @{N='SortKey'; E={ Get-ManifestVersionKey -Name $_.name }} |
+            Where-Object { $null -ne $_.SortKey } |
+            Sort-Object SortKey -Descending |
+            Select-Object -ExpandProperty name)
 
-    if (-not $LatestVersionObj) { throw "Could not determine a valid version folder for '$Id'." }
-    $LatestVersion = $LatestVersionObj.Name
+        if ($Candidates.Count -eq 0) { throw "Could not determine a valid version folder for '$Id'." }
+    }
 
-    # 4. Get Manifest  [API call 2 of 2]
-    $VersionPath = "$BaseApi/$LatestVersion"
-    $VersionFiles = Invoke-RestMethod -Uri $VersionPath -Method Get -Headers $Headers -ErrorAction Stop
-    $InstallerFile = $VersionFiles | Where-Object { $_.name -like "*.installer.yaml" } | Select-Object -First 1
-    if (-not $InstallerFile) { throw "No installer YAML found for '$Id' $LatestVersion." }
+    # 4. Get Manifest
+    $LatestVersion = $null
+    $InstallerFile = $null
+    $Tried         = New-Object System.Collections.Generic.List[string]
+
+    # Bounded: each probe is an API call, and that allowance is scarce.
+    foreach ($Candidate in ($Candidates | Select-Object -First 5)) {
+        $Tried.Add($Candidate)
+        try {
+            $VersionFiles = Invoke-RestMethod -Uri "$BaseApi/$Candidate" -Method Get -Headers $Headers -ErrorAction Stop
+        } catch { continue }
+
+        $File = $VersionFiles | Where-Object { $_.name -like "*.installer.yaml" } | Select-Object -First 1
+        if ($File) { $LatestVersion = $Candidate; $InstallerFile = $File; break }
+    }
+
+    if (-not $InstallerFile) {
+        throw ("No installer YAML found for '{0}'. Tried: {1}." -f $Id, ($Tried -join ', '))
+    }
 
     # Served from raw.githubusercontent.com, which is CDN-backed and not
     # subject to the API rate limit, so no credentials are sent here.
