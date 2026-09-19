@@ -143,28 +143,39 @@ function Test-TecharyApp {
 
     # --- 2. EXACT DISPLAY NAME ----------------------------------------
     # A custom catalogue entry carries the real ARP DisplayName for its ID.
-    $Candidates = New-Object System.Collections.Generic.List[string]
-    $Candidates.Add($Name)
-    try {
-        $CustomApp = Get-CustomApp -Id $Name -NoRefresh
-        if ($CustomApp -and $CustomApp.DisplayName) { $Candidates.Add($CustomApp.DisplayName) }
-    } catch {}
-
+    # Two lists, because a name safe to compare exactly is not safe to compare
+    # as a substring.
+    #
     # The detection index carries each package's canonical display name, which
     # is what bridges an ID to its ARP entry: "Google.Chrome" never matches
-    # "Google Chrome" on its own.
+    # "Google Chrome" on its own, and product codes alone do not cover it
+    # because Chrome's installed code varies by build.
     #
-    # This matters more than it looks. Product codes alone are not sufficient
-    # even when the index has some: Chrome's installed product code varies by
-    # build, so the three the manifests declare missed a live install that the
-    # canonical name then matched exactly.
-    if ($Entry -and $Entry.Name) { $Candidates.Add($Entry.Name) }
+    # Those names are short and generic, so they are used for exact comparison
+    # ONLY. Feeding them to the substring tier reports anything that merely
+    # contains them: "Steam" matches the MSIX package "MSTeams", and "Git"
+    # matches "GitHub CLI". Both were observed.
+    $ExactCandidates = New-Object System.Collections.Generic.List[string]
+    $LooseCandidates = New-Object System.Collections.Generic.List[string]
+
+    $ExactCandidates.Add($Name)
+    $LooseCandidates.Add($Name)
+
+    try {
+        $CustomApp = Get-CustomApp -Id $Name -NoRefresh
+        if ($CustomApp -and $CustomApp.DisplayName) {
+            $ExactCandidates.Add($CustomApp.DisplayName)
+            $LooseCandidates.Add($CustomApp.DisplayName)
+        }
+    } catch {}
+
+    if ($Entry -and $Entry.Name) { $ExactCandidates.Add($Entry.Name) }
 
     $AllArp = foreach ($Hive in $Hives) {
         Get-ItemProperty -Path (Join-Path $Hive '*') -ErrorAction SilentlyContinue
     }
 
-    foreach ($Candidate in $Candidates) {
+    foreach ($Candidate in $ExactCandidates) {
         $Exact = $AllArp | Where-Object { $_.DisplayName -eq $Candidate } | Select-Object -First 1
         if ($Exact) {
             Write-Verbose "Matched exactly on DisplayName '$Candidate'"
@@ -174,7 +185,9 @@ function Test-TecharyApp {
     }
 
     # --- 3. SUBSTRING (imprecise, kept for compatibility) -------------
-    foreach ($Candidate in $Candidates) {
+    # Loose list only. A canonical name from the index is too generic to
+    # widen with wildcards.
+    foreach ($Candidate in $LooseCandidates) {
         # Escaped: an unescaped name containing [ or ] is a wildcard pattern,
         # which previously made the comparison silently match nothing.
         $Pattern = "*" + [System.Management.Automation.WildcardPattern]::Escape($Candidate) + "*"
@@ -196,7 +209,10 @@ function Test-TecharyApp {
             [Security.Principal.WindowsBuiltInRole]::Administrator)
     } catch {}
 
-    foreach ($Candidate in $Candidates) {
+    # Loose list only, for the same reason: "Steam" as a wildcard matches the
+    # MSIX package MSTeams, which was reported as Valve.Steam being installed
+    # on a machine that has never had it.
+    foreach ($Candidate in $LooseCandidates) {
         $Pattern = "*" + [System.Management.Automation.WildcardPattern]::Escape($Candidate) + "*"
         $Msix = $null
         try {
