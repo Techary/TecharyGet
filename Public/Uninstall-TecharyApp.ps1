@@ -27,26 +27,91 @@ function Uninstall-TecharyApp {
     # 2. IF NOT IN REGISTRY, CHECK MSIX (Modern Apps)
     if (-not $App) {
         Write-PackagerLog -Message "Not found in Registry. Checking Modern Apps (MSIX)..."
-        $MsixResults = Get-AppxPackage -Name "*$Name*" -ErrorAction SilentlyContinue
 
-        if ($MsixResults) {
-            # FIX: Handle cases where multiple apps match (Array vs Single Object)
+        # SYSTEM has essentially no packages of its own, so a plain
+        # Get-AppxPackage run from an RMM found nothing and reported the app as
+        # absent. -AllUsers is what makes this work in the context the module is
+        # actually driven from. It needs elevation, so fall back without it.
+        $IsElevated = $false
+        try {
+            $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+            $IsElevated = (New-Object Security.Principal.WindowsPrincipal($Identity)).IsInRole(
+                [Security.Principal.WindowsBuiltInRole]::Administrator)
+        } catch {}
+
+        $MsixResults = @()
+        if ($IsElevated) {
+            try { $MsixResults = @(Get-AppxPackage -AllUsers -Name "*$Name*" -ErrorAction Stop) }
+            catch {
+                Write-PackagerLog -Message "Could not enumerate packages for all users ($($_.Exception.Message)). Falling back to the current user." -Severity Warning
+                $MsixResults = @(Get-AppxPackage -Name "*$Name*" -ErrorAction SilentlyContinue)
+            }
+        } else {
+            Write-PackagerLog -Message "Not elevated, so only the current user's packages are visible." -Severity Warning
+            $MsixResults = @(Get-AppxPackage -Name "*$Name*" -ErrorAction SilentlyContinue)
+        }
+
+        # A provisioned package is what seeds new user profiles. Leaving it in
+        # place meant a removed app reappeared for the next user who signed in.
+        $Provisioned = @()
+        if ($IsElevated) {
+            try {
+                $Provisioned = @(Get-AppxProvisionedPackage -Online -ErrorAction Stop |
+                                 Where-Object { $_.DisplayName -like "*$Name*" })
+            } catch {
+                Write-PackagerLog -Message "Could not enumerate provisioned packages: $($_.Exception.Message)" -Severity Warning
+            }
+        }
+
+        if ($MsixResults.Count -gt 0 -or $Provisioned.Count -gt 0) {
+            # Handle cases where multiple apps match (Array vs Single Object)
             foreach ($Package in $MsixResults) {
-                Write-PackagerLog -Message "Found Modern App: $($Package.Name)"
+                Write-PackagerLog -Message "Found Modern App: $($Package.Name) ($($Package.PackageFullName))"
 
                 if ($WhatIf) {
-                    Write-Host "[WhatIf] Would remove: $($Package.PackageFullName)" -ForegroundColor Yellow
+                    $Scope = if ($IsElevated) { "for all users" } else { "for the current user only" }
+                    Write-Host "[WhatIf] Would remove $Scope`: $($Package.PackageFullName)" -ForegroundColor Yellow
                     continue
                 }
 
                 try {
-                    Remove-AppxPackage -Package $Package.PackageFullName -ErrorAction Stop
-                    Write-PackagerLog -Message "Success: Removed $($Package.Name)"
+                    if ($IsElevated) {
+                        Remove-AppxPackage -Package $Package.PackageFullName -AllUsers -ErrorAction Stop
+                        Write-PackagerLog -Message "Success: Removed $($Package.Name) for all users."
+                    } else {
+                        Remove-AppxPackage -Package $Package.PackageFullName -ErrorAction Stop
+                        Write-PackagerLog -Message "Success: Removed $($Package.Name) for the current user."
+                    }
                 }
                 catch {
-                    Write-PackagerLog -Message "Failed to remove $($Package.Name): $_" -Severity Error
+                    # -AllUsers is unsupported on some builds. A per-user removal
+                    # still beats reporting an outright failure.
+                    Write-PackagerLog -Message "All-users removal failed for $($Package.Name): $($_.Exception.Message). Retrying for the current user." -Severity Warning
+                    try {
+                        Remove-AppxPackage -Package $Package.PackageFullName -ErrorAction Stop
+                        Write-PackagerLog -Message "Success: Removed $($Package.Name) for the current user."
+                    }
+                    catch {
+                        Write-PackagerLog -Message "Failed to remove $($Package.Name): $($_.Exception.Message)" -Severity Error
+                    }
                 }
             }
+
+            foreach ($Prov in $Provisioned) {
+                if ($WhatIf) {
+                    Write-Host "[WhatIf] Would deprovision: $($Prov.PackageName)" -ForegroundColor Yellow
+                    continue
+                }
+
+                try {
+                    Remove-AppxProvisionedPackage -Online -PackageName $Prov.PackageName -ErrorAction Stop | Out-Null
+                    Write-PackagerLog -Message "Deprovisioned $($Prov.DisplayName), so it will not return for new users."
+                }
+                catch {
+                    Write-PackagerLog -Message "Failed to deprovision $($Prov.DisplayName): $($_.Exception.Message)" -Severity Error
+                }
+            }
+
             return
         }
 
