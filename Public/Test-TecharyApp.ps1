@@ -150,6 +150,16 @@ function Test-TecharyApp {
         if ($CustomApp -and $CustomApp.DisplayName) { $Candidates.Add($CustomApp.DisplayName) }
     } catch {}
 
+    # The detection index carries each package's canonical display name, which
+    # is what bridges an ID to its ARP entry: "Google.Chrome" never matches
+    # "Google Chrome" on its own.
+    #
+    # This matters more than it looks. Product codes alone are not sufficient
+    # even when the index has some: Chrome's installed product code varies by
+    # build, so the three the manifests declare missed a live install that the
+    # canonical name then matched exactly.
+    if ($Entry -and $Entry.Name) { $Candidates.Add($Entry.Name) }
+
     $AllArp = foreach ($Hive in $Hives) {
         Get-ItemProperty -Path (Join-Path $Hive '*') -ErrorAction SilentlyContinue
     }
