@@ -1,6 +1,10 @@
 function Get-CustomApp {
     param (
-        [string]$Id
+        [string]$Id,
+
+        # Detection callers pass this so a scheduled check never makes a
+        # network call; it reads whatever copy is already on disk.
+        [switch]$NoRefresh
     )
 
     # --- 1. CLOUD SOURCE ---
@@ -22,7 +26,7 @@ function Get-CustomApp {
 
         # Logic: Only download if the cache doesn't exist OR it's older than 60 minutes.
         # This prevents spamming GitHub every time you run a command.
-        $NeedUpdate = $true
+        $NeedUpdate = -not $NoRefresh
         if (Test-Path $CachePath) {
             $LastWrite = (Get-Item $CachePath).LastWriteTime
             if ((Get-Date) -lt $LastWrite.AddMinutes(60)) { $NeedUpdate = $false }

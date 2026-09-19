@@ -10,6 +10,7 @@ function Get-ManifestIndex {
     [CmdletBinding()]
     param(
         [int]$CacheHours = 12,
+        [switch]$NoRefresh,
         [switch]$Force
     )
 
@@ -19,7 +20,9 @@ function Get-ManifestIndex {
     try {
         if (-not (Test-Path $CacheDir)) { New-Item -ItemType Directory -Path $CacheDir -Force -ErrorAction Stop | Out-Null }
 
-        $NeedUpdate = $true
+        # Detection runs on a schedule on every endpoint, so it must never make
+        # a network call. -NoRefresh reads whatever is already cached.
+        $NeedUpdate = -not $NoRefresh
         if (-not $Force -and (Test-Path $CachePath)) {
             $Age = (Get-Date) - (Get-Item $CachePath).LastWriteTime
             if ($Age.TotalHours -lt $CacheHours) { $NeedUpdate = $false }
@@ -59,10 +62,11 @@ function Get-IndexedManifest {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)][string]$Id,
-        [Parameter(Mandatory=$true)][string]$SysArch
+        [Parameter(Mandatory=$true)][string]$SysArch,
+        [switch]$NoRefresh
     )
 
-    $Index = Get-ManifestIndex
+    $Index = Get-ManifestIndex -NoRefresh:$NoRefresh
     if (-not $Index -or -not $Index.Packages) { return $null }
 
     $Entry = $Index.Packages.$Id
