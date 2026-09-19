@@ -41,7 +41,12 @@ function Uninstall-TecharyApp {
 
         $MsixResults = @()
         if ($IsElevated) {
-            try { $MsixResults = @(Get-AppxPackage -AllUsers -Name "*$Name*" -ErrorAction Stop) }
+            # Filtered to packages actually installed for someone. -AllUsers also
+            # lists packages that are merely Staged on the machine, and a staged
+            # package remains listed after a successful removal, so an unfiltered
+            # list makes a completed uninstall look like it did nothing.
+            try { $MsixResults = @(Get-AppxPackage -AllUsers -Name "*$Name*" -ErrorAction Stop |
+                                   Where-Object { Test-AppxInstalledForAnyUser -Package $_ }) }
             catch {
                 Write-PackagerLog -Message "Could not enumerate packages for all users ($($_.Exception.Message)). Falling back to the current user." -Severity Warning
                 $MsixResults = @(Get-AppxPackage -Name "*$Name*" -ErrorAction SilentlyContinue)
@@ -77,10 +82,29 @@ function Uninstall-TecharyApp {
                 try {
                     if ($IsElevated) {
                         Remove-AppxPackage -Package $Package.PackageFullName -AllUsers -ErrorAction Stop
-                        Write-PackagerLog -Message "Success: Removed $($Package.Name) for all users."
+                        $Scope = "for all users"
                     } else {
                         Remove-AppxPackage -Package $Package.PackageFullName -ErrorAction Stop
-                        Write-PackagerLog -Message "Success: Removed $($Package.Name) for the current user."
+                        $Scope = "for the current user"
+                    }
+
+                    # Confirm rather than infer, but give it time to settle.
+                    # Removal completes asynchronously: the package is still
+                    # listed for a short period after Remove-AppxPackage returns,
+                    # so an immediate check reports a false failure.
+                    $Deadline = (Get-Date).AddSeconds(30)
+                    $StillThere = $true
+                    while ($StillThere -and (Get-Date) -lt $Deadline) {
+                        $StillThere = Test-AppxInstalledForAnyUser -PackageFullName $Package.PackageFullName
+                        if ($StillThere) { Start-Sleep -Seconds 2 }
+                    }
+
+                    if ($StillThere) {
+                        # Not asserted as a failure: removal may still be pending.
+                        # Reported so it is visible rather than assumed successful.
+                        Write-PackagerLog -Message "Removed $($Package.Name) $Scope, but it is still registered after 30s. Removal may be pending a reboot or sign-out." -Severity Warning
+                    } else {
+                        Write-PackagerLog -Message "Success: Removed $($Package.Name) $Scope, confirmed."
                     }
                 }
                 catch {
