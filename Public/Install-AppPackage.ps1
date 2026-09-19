@@ -31,21 +31,43 @@ function Install-AppPackage {
         }
         { $_ -in ".msix", ".appx", ".msixbundle", ".appxbundle" } {
             Write-PackagerLog -Message "Detected Modern App. Sideloading..."
+
+            # Try provisioning as the machine is configured, before changing
+            # anything. A correctly signed package normally needs no policy
+            # change at all, and the previous code relaxed sideloading policy
+            # unconditionally on every MSIX install and never put it back,
+            # permanently weakening every machine the module touched.
+            $Provisioned = $false
             try {
-                $PolicyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Appx"
-                if (-not (Test-Path $PolicyPath)) { New-Item -Path $PolicyPath -Force | Out-Null }
-                New-ItemProperty -Path $PolicyPath -Name "AllowAllTrustedApps" -Value 1 -PropertyType DWORD -Force | Out-Null
-                
-                $DevPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
-                if (-not (Test-Path $DevPath)) { New-Item -Path $DevPath -Force | Out-Null }
-                New-ItemProperty -Path $DevPath -Name "AllowAllTrustedApps" -Value 1 -PropertyType DWORD -Force | Out-Null
-                
                 Add-AppxProvisionedPackage -Online -PackagePath $FilePath -SkipLicense -ErrorAction Stop | Out-Null
                 Write-PackagerLog -Message "MSIX Provisioned Successfully."
+                $Provisioned = $true
             }
             catch {
-                Write-PackagerLog -Message "Provisioning Failed ($($_)). Trying Per-User..." -Severity Warning
-                try { Add-AppxPackage -Path $FilePath -ErrorAction Stop } catch { throw $_ }
+                Write-PackagerLog -Message "Provisioning refused under current policy ($($_.Exception.Message)). Relaxing sideloading policy temporarily." -Severity Warning
+            }
+
+            if (-not $Provisioned) {
+                $PolicyState = $null
+                try {
+                    $PolicyState = Push-SideloadPolicy
+                    if (-not $PolicyState.Success) {
+                        Write-PackagerLog -Message "Could not fully relax sideloading policy: $($PolicyState.Errors -join '; ')" -Severity Warning
+                    }
+
+                    Add-AppxProvisionedPackage -Online -PackagePath $FilePath -SkipLicense -ErrorAction Stop | Out-Null
+                    Write-PackagerLog -Message "MSIX Provisioned Successfully."
+                    $Provisioned = $true
+                }
+                catch {
+                    Write-PackagerLog -Message "Provisioning Failed ($($_.Exception.Message)). Trying Per-User..." -Severity Warning
+                    try { Add-AppxPackage -Path $FilePath -ErrorAction Stop } catch { throw $_ }
+                }
+                finally {
+                    # Always, including on the throw above.
+                    Pop-SideloadPolicy -State $PolicyState
+                    Write-PackagerLog -Message "Sideloading policy restored to its previous state."
+                }
             }
             return
         }
