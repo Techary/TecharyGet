@@ -12,7 +12,7 @@ function Get-CustomApp {
     # Structure: https://raw.githubusercontent.com/<User>/<Repo>/<Branch>/<PathToFile>
     # raw.githubusercontent.com is CDN-backed and is NOT subject to the
     # api.github.com rate limit, so this stays cheap at fleet scale.
-    $CloudUrl = "https://raw.githubusercontent.com/Techary/TecharyGet/BETA/Private/CustomApps.json"
+    $CloudUrl = "https://raw.githubusercontent.com/Techary/TecharyGet/main/Private/CustomApps.json"
 
     # --- 2. LOCAL CACHE ---
     # We cache the file locally so the script works even if GitHub is briefly down
