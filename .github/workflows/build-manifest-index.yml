@@ -47,35 +47,42 @@ jobs:
           DB=wingetsrc/Public/index.db
           test -f "$DB"
 
-          # Packages with neither a product code nor a package family name
-          # cannot be identified this way, so including them is dead weight.
-          # char(31) as the separator: a unit separator cannot occur inside a
-          # product code, whereas a pipe or comma plausibly could.
+          # One row per identifier rather than a delimited list. Any separator
+          # has to be a character that cannot appear inside a product code, and
+          # the obvious safe choice is a control character, which is not legal
+          # in a YAML workflow file. Emitting pairs and grouping in jq avoids
+          # the question entirely.
+          #
+          # Packages with neither a product code nor a package family name are
+          # excluded: they cannot be identified this way, so they are dead
+          # weight in a file every endpoint downloads.
           sqlite3 "$DB" -json "
-            SELECT p.id AS Id,
-                   p.name AS Name,
-                   p.latest_version AS Version,
-                   (SELECT group_concat(productcode, char(31)) FROM productcodes2 WHERE package = p.rowid) AS ProductCodes,
-                   (SELECT group_concat(pfn, char(31)) FROM pfns2 WHERE package = p.rowid) AS Pfns
-            FROM packages p
-            WHERE EXISTS (SELECT 1 FROM productcodes2 WHERE package = p.rowid)
-               OR EXISTS (SELECT 1 FROM pfns2 WHERE package = p.rowid)
-            ORDER BY p.id;" > packages.json
+            SELECT p.id AS Id, p.name AS Name, p.latest_version AS Version,
+                   'P' AS Kind, c.productcode AS Value
+            FROM packages p JOIN productcodes2 c ON c.package = p.rowid
+            UNION ALL
+            SELECT p.id, p.name, p.latest_version,
+                   'F', f.pfn
+            FROM packages p JOIN pfns2 f ON f.package = p.rowid
+            ORDER BY 1;" > pairs.json
 
           NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           jq --arg now "$NOW" '
-            { Generated: $now,
-              Source: "winget source2 index",
-              PackageCount: length,
-              Packages: (map({
-                key: .Id,
+            group_by(.Id)
+            | map({
+                key: .[0].Id,
                 value: {
-                  Name: .Name,
-                  Version: .Version,
-                  ProductCodes: ((.ProductCodes // "") | if . == "" then [] else split("") end),
-                  Pfns:         ((.Pfns         // "") | if . == "" then [] else split("") end)
-                }}) | from_entries) }
-          ' packages.json > Index/Detection.json
+                  Name: .[0].Name,
+                  Version: .[0].Version,
+                  ProductCodes: [ .[] | select(.Kind == "P") | .Value ],
+                  Pfns:         [ .[] | select(.Kind == "F") | .Value ]
+                }})
+            | from_entries
+            | { Generated: $now,
+                Source: "winget source2 index",
+                PackageCount: length,
+                Packages: . }
+          ' pairs.json > Index/Detection.json
 
           echo "detection index: $(jq -r .PackageCount Index/Detection.json) packages, $(du -h Index/Detection.json | cut -f1)"
 
