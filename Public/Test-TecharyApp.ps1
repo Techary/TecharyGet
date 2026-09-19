@@ -184,6 +184,43 @@ function Test-TecharyApp {
         }
     }
 
+    # --- 2b. CANONICAL NAME AS A BOUNDED PREFIX -----------------------
+    # ARP routinely appends a locale or version to the product name, so an
+    # exact comparison misses by a few characters:
+    #
+    #   index   Microsoft.Office -> "Microsoft 365 Apps for enterprise"
+    #   ARP                         "Microsoft 365 Apps for enterprise - en-us"
+    #
+    # Detection returned False forever for Office, which in a self-healing
+    # pair means the install policy reinstalls it on every scan.
+    #
+    # A plain substring match would fix that and reintroduce the false
+    # positives tier 3 is restricted to avoid. The rule that satisfies both is
+    # a prefix that ends on a token boundary: the entry must START with the
+    # candidate, and the next character must not be alphanumeric.
+    #
+    #   "Microsoft 365 Apps for enterprise - en-us"  next char " "  -> match
+    #   "7-Zip 26.03 (x64)"            vs "7-Zip"    next char " "  -> match
+    #   "GitHub CLI"                   vs "Git"      next char "H"  -> no
+    #   "MSTeams"                      vs "Steam"    not a prefix   -> no
+    foreach ($Candidate in $ExactCandidates) {
+        if ([string]::IsNullOrWhiteSpace($Candidate)) { continue }
+
+        $Bounded = $AllArp | Where-Object {
+            $Display = $_.DisplayName
+            if ([string]::IsNullOrEmpty($Display)) { return $false }
+            if (-not $Display.StartsWith($Candidate, [StringComparison]::OrdinalIgnoreCase)) { return $false }
+            if ($Display.Length -eq $Candidate.Length) { return $true }
+            -not [char]::IsLetterOrDigit($Display[$Candidate.Length])
+        } | Select-Object -First 1
+
+        if ($Bounded) {
+            Write-Verbose "Matched '$Candidate' as a bounded prefix of '$($Bounded.DisplayName)'"
+            $R = New-Result $true 'NamePrefix' $Bounded.DisplayName $Bounded.DisplayVersion $Bounded.PSPath
+            if ($Detailed) { return $R } else { return $true }
+        }
+    }
+
     # --- 3. SUBSTRING (imprecise, kept for compatibility) -------------
     # Loose list only. A canonical name from the index is too generic to
     # widen with wildcards.
