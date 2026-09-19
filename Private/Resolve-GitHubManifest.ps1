@@ -6,6 +6,13 @@ function Get-ManifestVersionKey {
     # discarding the failures silently dropped real releases, and threw outright
     # for packages where no folder happened to parse. Build a zero-padded key so
     # ordinary string sorting gives correct numeric ordering instead.
+    # A winget version folder starts with a digit. Siblings like "x86",
+    # "arm64", "Canary", "PTB" and "Development" are architectures or release
+    # channels, not versions, and must not be ranked as such: "x86" yields 86,
+    # which outranks the first component of 1.0.9258 and wins the sort. Discord
+    # carries all five of those alongside 144 real versions.
+    if ($Name -notmatch '^v?\d') { return $null }
+
     $Numbers = [regex]::Matches($Name, '\d+') | ForEach-Object { $_.Value }
     if (-not $Numbers) { return $null }
 
