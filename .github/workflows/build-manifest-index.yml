@@ -4,6 +4,7 @@ on:
   schedule:
     # Nightly. NOTE: GitHub only runs scheduled workflows from the repository's
     # DEFAULT branch, so this fires once the workflow exists on that branch.
+    # Push and manual dispatch work from any branch.
     - cron: '17 3 * * *'
   workflow_dispatch:
   push:
@@ -28,7 +29,62 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve manifests
+      # ---------------------------------------------------------------
+      # Detection index: EVERY package in the winget source, not just the
+      # curated catalogue. Built from Microsoft's own published source
+      # index, which already carries the ARP product codes and MSIX package
+      # family names that detection matches on. One 3.5 MB CDN download, no
+      # api.github.com calls, no clone of winget-pkgs.
+      # ---------------------------------------------------------------
+      - name: Build detection index from the winget source
+        run: |
+          set -euo pipefail
+          curl -sSL --retry 3 --max-time 300 \
+            -o source2.msix https://cdn.winget.microsoft.com/cache/source2.msix
+          ls -l source2.msix
+
+          unzip -o -q source2.msix -d wingetsrc
+          DB=wingetsrc/Public/index.db
+          test -f "$DB"
+
+          # Packages with neither a product code nor a package family name
+          # cannot be identified this way, so including them is dead weight.
+          # char(31) as the separator: a unit separator cannot occur inside a
+          # product code, whereas a pipe or comma plausibly could.
+          sqlite3 "$DB" -json "
+            SELECT p.id AS Id,
+                   p.name AS Name,
+                   p.latest_version AS Version,
+                   (SELECT group_concat(productcode, char(31)) FROM productcodes2 WHERE package = p.rowid) AS ProductCodes,
+                   (SELECT group_concat(pfn, char(31)) FROM pfns2 WHERE package = p.rowid) AS Pfns
+            FROM packages p
+            WHERE EXISTS (SELECT 1 FROM productcodes2 WHERE package = p.rowid)
+               OR EXISTS (SELECT 1 FROM pfns2 WHERE package = p.rowid)
+            ORDER BY p.id;" > packages.json
+
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq --arg now "$NOW" '
+            { Generated: $now,
+              Source: "winget source2 index",
+              PackageCount: length,
+              Packages: (map({
+                key: .Id,
+                value: {
+                  Name: .Name,
+                  Version: .Version,
+                  ProductCodes: ((.ProductCodes // "") | if . == "" then [] else split("") end),
+                  Pfns:         ((.Pfns         // "") | if . == "" then [] else split("") end)
+                }}) | from_entries) }
+          ' packages.json > Index/Detection.json
+
+          echo "detection index: $(jq -r .PackageCount Index/Detection.json) packages, $(du -h Index/Detection.json | cut -f1)"
+
+      # ---------------------------------------------------------------
+      # Curated index: full install metadata (installer URL, silent args) for
+      # the packages in Index/Catalog.json, so a common install needs no API
+      # call either. Anything not listed still installs, resolved live.
+      # ---------------------------------------------------------------
+      - name: Resolve curated manifests
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,6 +94,7 @@ jobs:
         run: |
           set -euo pipefail
           cp Index/Manifests.json "$RUNNER_TEMP/Manifests.json"
+          cp Index/Detection.json "$RUNNER_TEMP/Detection.json"
 
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -47,8 +104,9 @@ jobs:
           git checkout --orphan manifest-index
           git rm -rf . -q
           cp "$RUNNER_TEMP/Manifests.json" Manifests.json
-          git add Manifests.json
+          cp "$RUNNER_TEMP/Detection.json" Detection.json
+          git add Manifests.json Detection.json
           git commit -q -m "Refresh manifest index ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
           git push -f origin manifest-index
 
-          echo "Published to https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/manifest-index/Manifests.json"
+          echo "Published to https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/manifest-index/"

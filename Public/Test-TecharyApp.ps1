@@ -58,30 +58,69 @@ function Test-TecharyApp {
     elseif ([Environment]::Is64BitOperatingSystem) { $SysArch = "x64" }
     else { $SysArch = "x86" }
 
-    # --- 1. PRODUCT CODE (definitive) ---------------------------------
-    $ProductCode = $null
+    # --- 1. PRODUCT CODE / PACKAGE FAMILY (definitive) -----------------
+    # Three sources, most complete first: the full detection index covers
+    # every package in the winget repository; the curated manifest index and
+    # the local manifest cache cover what this machine has installed before.
+    $ProductCodes = New-Object System.Collections.Generic.List[string]
+    $Pfns         = New-Object System.Collections.Generic.List[string]
+
     try {
-        $Indexed = Get-IndexedManifest -Id $Name -SysArch $SysArch -NoRefresh
-        if ($Indexed) { $ProductCode = $Indexed.ProductCode }
+        $Entry = Get-DetectionEntry -Id $Name -NoRefresh
+        if ($Entry) {
+            foreach ($Code in $Entry.ProductCodes) { if ($Code) { $ProductCodes.Add($Code) } }
+            foreach ($Family in $Entry.Pfns) { if ($Family) { $Pfns.Add($Family) } }
+            Write-Verbose "Detection index: $($ProductCodes.Count) product code(s), $($Pfns.Count) package family name(s) for '$Name'"
+        }
     } catch {}
 
-    if (-not $ProductCode) {
-        $CachedManifest = Join-Path $env:ProgramData ("TecharyGet\ManifestCache\" + ($Name -replace '[\\/:*?"<>|]', '_') + ".json")
-        if (Test-Path $CachedManifest) {
-            try { $ProductCode = (Get-Content $CachedManifest -Raw | ConvertFrom-Json).ProductCode } catch {}
-        }
+    try {
+        $Indexed = Get-IndexedManifest -Id $Name -SysArch $SysArch -NoRefresh
+        if ($Indexed -and $Indexed.ProductCode) { $ProductCodes.Add($Indexed.ProductCode) }
+    } catch {}
+
+    $CachedManifest = Join-Path $env:ProgramData ("TecharyGet\ManifestCache\" + ($Name -replace '[\\/:*?"<>|]', '_') + ".json")
+    if (Test-Path $CachedManifest) {
+        try {
+            $Local = (Get-Content $CachedManifest -Raw | ConvertFrom-Json).ProductCode
+            if ($Local) { $ProductCodes.Add($Local) }
+        } catch {}
     }
 
-    if ($ProductCode) {
+    foreach ($Code in $ProductCodes) {
         foreach ($Hive in $Hives) {
-            $Key = Join-Path $Hive $ProductCode
+            $Key = Join-Path $Hive $Code
             if (Test-Path $Key) {
                 $Item = Get-ItemProperty -Path $Key -ErrorAction SilentlyContinue
-                Write-Verbose "Matched on ProductCode '$ProductCode' at $Key"
+                Write-Verbose "Matched on ProductCode '$Code' at $Key"
                 $R = New-Result $true 'ProductCode' $Item.DisplayName $Item.DisplayVersion $Key
                 if ($Detailed) { return $R } else { return $true }
             }
         }
+    }
+
+    if ($Pfns.Count -gt 0) {
+        $Elevated = $false
+        try {
+            $Ident = [Security.Principal.WindowsIdentity]::GetCurrent()
+            $Elevated = (New-Object Security.Principal.WindowsPrincipal($Ident)).IsInRole(
+                [Security.Principal.WindowsBuiltInRole]::Administrator)
+        } catch {}
+
+        try {
+            # -AllUsers when we can: SYSTEM sees almost none of its own packages.
+            if ($Elevated) { $Installed = @(Get-AppxPackage -AllUsers -ErrorAction Stop) }
+            else { $Installed = @(Get-AppxPackage -ErrorAction SilentlyContinue) }
+
+            foreach ($Family in $Pfns) {
+                $Hit = $Installed | Where-Object { $_.PackageFamilyName -eq $Family } | Select-Object -First 1
+                if ($Hit) {
+                    Write-Verbose "Matched on PackageFamilyName '$Family'"
+                    $R = New-Result $true 'PackageFamilyName' $Hit.Name $Hit.Version $Hit.PackageFullName
+                    if ($Detailed) { return $R } else { return $true }
+                }
+            }
+        } catch {}
     }
 
     # --- 2. EXACT DISPLAY NAME ----------------------------------------
