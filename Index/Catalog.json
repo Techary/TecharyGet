@@ -1,0 +1,17 @@
+{
+    "_comment": "winget package IDs pre-resolved nightly into Manifests.json. Adding an ID here is the only step needed to take it off the live GitHub API path. Seed list - edit freely.",
+    "Packages": [
+        "7zip.7zip",
+        "8x8.Work",
+        "Adobe.Acrobat.Reader.64-bit",
+        "Dell.CommandUpdate",
+        "Google.Chrome",
+        "Microsoft.PowerToys",
+        "Microsoft.VisualStudioCode",
+        "Mozilla.Firefox",
+        "Notepad++.Notepad++",
+        "SublimeHQ.SublimeText.4",
+        "VideoLAN.VLC",
+        "Zoom.Zoom"
+    ]
+}

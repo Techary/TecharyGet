@@ -10,8 +10,9 @@ function Get-GitHubInstaller {
         # without the token appearing in a command line or an RMM job log.
         [string]$GitHubToken = $env:TECHARYGET_GITHUB_TOKEN,
 
-        # Resolved manifests are cached on disk. Repeat and retry installs of
-        # the same app then cost no API calls at all.
+        # Resolved manifests are cached on disk, and the prebuilt index covers
+        # the catalogue centrally. Repeat and retry installs of the same app
+        # then cost no API calls at all.
         [int]$CacheHours = 24,
         [switch]$NoCache
     )
@@ -50,6 +51,16 @@ function Get-GitHubInstaller {
             catch {
                 Write-PackagerLog -Message "Manifest cache for $Id unreadable, re-resolving." -Severity Warning
             }
+        }
+    }
+
+    # Prebuilt index: one CDN file covering the whole catalogue, refreshed
+    # nightly in CI. Costs no api.github.com allowance at all.
+    if (-not $Meta -and -not $NoCache) {
+        $Indexed = Get-IndexedManifest -Id $Id -SysArch $SysArch
+        if ($Indexed) {
+            Write-PackagerLog -Message "Resolved $Id v$($Indexed.Version) from the prebuilt index. No API call needed."
+            $Meta = $Indexed
         }
     }
 
