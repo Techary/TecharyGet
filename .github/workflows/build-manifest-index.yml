@@ -53,9 +53,11 @@ jobs:
           # in a YAML workflow file. Emitting pairs and grouping in jq avoids
           # the question entirely.
           #
-          # Packages with neither a product code nor a package family name are
-          # excluded: they cannot be identified this way, so they are dead
-          # weight in a file every endpoint downloads.
+          # Every package gets an entry, including those with neither a product
+          # code nor a package family name. Those cannot be matched by code,
+          # but the entry still carries the canonical display name, and that is
+          # what bridges an ID to its ARP entry: "Valve.Steam" never matches
+          # "Steam" on its own. A name-only row costs about 80 bytes.
           sqlite3 "$DB" -json "
             SELECT p.id AS Id, p.name AS Name, p.latest_version AS Version,
                    'P' AS Kind, c.productcode AS Value
@@ -64,6 +66,12 @@ jobs:
             SELECT p.id, p.name, p.latest_version,
                    'F', f.pfn
             FROM packages p JOIN pfns2 f ON f.package = p.rowid
+            UNION ALL
+            SELECT p.id, p.name, p.latest_version,
+                   'N', NULL
+            FROM packages p
+            WHERE NOT EXISTS (SELECT 1 FROM productcodes2 WHERE package = p.rowid)
+              AND NOT EXISTS (SELECT 1 FROM pfns2 WHERE package = p.rowid)
             ORDER BY 1;" > pairs.json
 
           NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
