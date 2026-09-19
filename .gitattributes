@@ -1,0 +1,6 @@
+# Workflow files must stay LF. A CRLF `run:` block reaches bash on the runner
+# with a literal CR on every line, which breaks the script.
+# Deliberately NOT declaring `* text=auto`: the existing blobs in this repo are
+# committed CRLF, so that would queue a repo-wide renormalisation diff.
+*.yml -text
+*.yaml -text

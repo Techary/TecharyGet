@@ -1,0 +1,54 @@
+name: Build manifest index
+
+on:
+  schedule:
+    # Nightly. NOTE: GitHub only runs scheduled workflows from the repository's
+    # DEFAULT branch, so this fires once the workflow exists on that branch.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Index/Catalog.json'
+      - 'Build/Build-ManifestIndex.ps1'
+      - 'Private/Resolve-GitHubManifest.ps1'
+      - '.github/workflows/build-manifest-index.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manifest-index
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve manifests
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./Build/Build-ManifestIndex.ps1 -CatalogPath Index/Catalog.json -OutputPath Index/Manifests.json
+
+      - name: Publish to the manifest-index branch
+        run: |
+          set -euo pipefail
+          cp Index/Manifests.json "$RUNNER_TEMP/Manifests.json"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Orphan + force-push keeps exactly one commit on the branch, so a
+          # nightly refresh never grows the repository or touches code history.
+          git checkout --orphan manifest-index
+          git rm -rf . -q
+          cp "$RUNNER_TEMP/Manifests.json" Manifests.json
+          git add Manifests.json
+          git commit -q -m "Refresh manifest index ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
+          git push -f origin manifest-index
+
+          echo "Published to https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/manifest-index/Manifests.json"
