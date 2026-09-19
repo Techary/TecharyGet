@@ -65,8 +65,20 @@ function Get-GitHubInstaller {
     }
 
     if (-not $Meta) {
+        # winget's own latest_version for this package. Authoritative, and it
+        # avoids re-deriving the version from a directory listing that also
+        # contains architectures, channels and nested package namespaces.
+        $KnownVersion = $null
         try {
-            $Meta = Resolve-GitHubManifest -Id $Id -SysArch $SysArch -Headers $Headers
+            $Entry = Get-DetectionEntry -Id $Id
+            if ($Entry -and $Entry.Version) {
+                $KnownVersion = $Entry.Version
+                Write-PackagerLog -Message "Index gives $Id latest version $KnownVersion; skipping version discovery."
+            }
+        } catch { }
+
+        try {
+            $Meta = Resolve-GitHubManifest -Id $Id -SysArch $SysArch -Headers $Headers -KnownVersion $KnownVersion
 
             try {
                 if (-not (Test-Path $CacheDir)) { New-Item -ItemType Directory -Path $CacheDir -Force -ErrorAction Stop | Out-Null }
