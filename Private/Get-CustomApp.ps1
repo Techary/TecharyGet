@@ -6,18 +6,20 @@ function Get-CustomApp {
     # --- 1. CLOUD SOURCE ---
     # We use the "Raw" GitHub URL so we get just the JSON text.
     # Structure: https://raw.githubusercontent.com/<User>/<Repo>/<Branch>/<PathToFile>
-    $CloudUrl = "https://raw.githubusercontent.com/Techary/TecharyGet/BETA/TecharyGet/Private/CustomApps.json"
-    
+    # raw.githubusercontent.com is CDN-backed and is NOT subject to the
+    # api.github.com rate limit, so this stays cheap at fleet scale.
+    $CloudUrl = "https://raw.githubusercontent.com/Techary/TecharyGet/BETA/Private/CustomApps.json"
+
     # --- 2. LOCAL CACHE ---
     # We cache the file locally so the script works even if GitHub is briefly down
     # or if the machine is offline (using the last known good copy).
     $CacheDir = "$env:PROGRAMDATA\TecharyGet"
     $CachePath = "$CacheDir\CustomApps_Cache.json"
-    
+
     # --- 3. SYNC LOGIC ---
     try {
         if (-not (Test-Path $CacheDir)) { New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null }
-        
+
         # Logic: Only download if the cache doesn't exist OR it's older than 60 minutes.
         # This prevents spamming GitHub every time you run a command.
         $NeedUpdate = $true
@@ -28,11 +30,20 @@ function Get-CustomApp {
 
         if ($NeedUpdate) {
             Write-PackagerLog -Message "Syncing Custom Catalog from GitHub..." -Severity Info
-            Invoke-WebRequest -Uri $CloudUrl -OutFile $CachePath -UseBasicParsing -ErrorAction Stop
+
+            # Download to a staging file and prove it parses before promoting it.
+            # A captive portal or proxy error page returns HTTP 200 with HTML,
+            # which would otherwise poison the cache for the next 60 minutes.
+            $StagePath = "$CachePath.tmp"
+            Invoke-WebRequest -Uri $CloudUrl -OutFile $StagePath -UseBasicParsing -ErrorAction Stop
+
+            $null = (Get-Content -Path $StagePath -Raw | ConvertFrom-Json)
+            Move-Item -Path $StagePath -Destination $CachePath -Force -ErrorAction Stop
         }
     }
     catch {
-        Write-PackagerLog -Message "Could not sync from GitHub (Offline?). Using local cache." -Severity Warning
+        Write-PackagerLog -Message "Could not sync Custom Catalog ($($_.Exception.Message)). Using local copy." -Severity Warning
+        Remove-Item "$CachePath.tmp" -Force -ErrorAction SilentlyContinue
     }
 
     # --- 4. READ DATA ---
@@ -45,8 +56,8 @@ function Get-CustomApp {
     # Fallback to the file shipped with the module (if cache is empty/broken)
     else {
         $LocalModulePath = Join-Path (Split-Path $PSScriptRoot -Parent) "Private\CustomApps.json"
-        if (Test-Path $LocalModulePath) { 
-            $JsonContent = Get-Content -Path $LocalModulePath -Raw 
+        if (Test-Path $LocalModulePath) {
+            $JsonContent = Get-Content -Path $LocalModulePath -Raw
         }
     }
 
@@ -62,6 +73,6 @@ function Get-CustomApp {
             return $null
         }
     }
-    
+
     return $null
 }

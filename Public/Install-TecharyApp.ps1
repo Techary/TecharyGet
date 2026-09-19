@@ -4,14 +4,18 @@ function Install-TecharyApp {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
-        [string]$Id
+        [string]$Id,
+
+        # Passed through to the winget-pkgs manifest lookup. Raises the GitHub
+        # API allowance from 60 to 5000 requests/hour where one is available.
+        [string]$GitHubToken = $env:TECHARYGET_GITHUB_TOKEN
     )
-    
+
     $Pkg = $null
 
     # --- ATTEMPT 1: GITHUB ---
     try {
-        $Pkg = Get-GitHubInstaller -Id $Id -ErrorAction Stop
+        $Pkg = Get-GitHubInstaller -Id $Id -GitHubToken $GitHubToken -ErrorAction Stop
     }
     catch {
         Write-PackagerLog -Message "Not found in GitHub ($Id). Checking Custom Catalog..." -Severity Info
@@ -22,24 +26,20 @@ function Install-TecharyApp {
         # Load the internal helper to check JSON
         # (Assuming Get-CustomApp is dot-sourced in .psm1)
         $CustomData = Get-CustomApp -Id $Id
-        
+
         if ($CustomData) {
             Write-PackagerLog -Message "Found '$Id' in Custom Catalog."
-            
-            # Use the Web Installer logic to download it
-            # We can reuse the logic or call Get-WebInstaller if you created it.
-            # Here is the inline logic for simplicity:
-            
+
             $DownloadPath = "$env:TEMP\AppPackager"
             if (Test-Path $DownloadPath) { Remove-Item "$DownloadPath\*" -Recurse -Force -ErrorAction SilentlyContinue }
             New-Item -ItemType Directory -Path $DownloadPath -Force | Out-Null
-            
+
             $FileName = "$Id.$($CustomData.InstallerType)"
             $FullPath = Join-Path $DownloadPath $FileName
-            
+
             Write-PackagerLog -Message "Downloading Custom App from: $($CustomData.Url)"
             Invoke-WebRequest -Uri $CustomData.Url -OutFile $FullPath -UseBasicParsing
-            
+
             # Build the Package Object manually
             $Pkg = [PSCustomObject]@{
                 Name          = $Id
@@ -52,17 +52,29 @@ function Install-TecharyApp {
     }
 
     if (-not $Pkg) {
-        Write-PackagerLog -Message "Application '$Id' not found in GitHub OR Custom Catalog." -Severity Error
-        return
+        $Msg = "Application '$Id' not found in GitHub OR Custom Catalog."
+        Write-PackagerLog -Message $Msg -Severity Error
+        # Throw rather than return. A caller driving this from Intune or an RMM
+        # remediation cannot distinguish a silent return from a successful
+        # install, so a mistyped Id would be reported to the console as success.
+        throw $Msg
     }
-    
+
     # --- INSTALLATION ---
     # MSI Fallback Logic
-    $Args = $Pkg.SilentArgs
-    if ([string]::IsNullOrWhiteSpace($Args) -and ($Pkg.InstallerPath -match ".msi$" -or $Pkg.InstallerType -eq "msi")) {
-        $Args = "/qb /norestart"
+    # Named InstallArgs, not Args: $Args is an automatic variable and assigning
+    # to it is undefined behaviour under Set-StrictMode.
+    $InstallArgs = $Pkg.SilentArgs
+    if ([string]::IsNullOrWhiteSpace($InstallArgs) -and ($Pkg.InstallerPath -match "\.msi$" -or $Pkg.InstallerType -eq "msi")) {
+        $InstallArgs = "/qb /norestart"
     }
-    
-    Install-AppPackage -Name $Pkg.Name -FilePath $Pkg.InstallerPath -Arguments $Args
-    Invoke-PackagerCleanup -Paths "$env:TEMP\AppPackager" -Force
+
+    try {
+        Install-AppPackage -Name $Pkg.Name -FilePath $Pkg.InstallerPath -Arguments $InstallArgs
+    }
+    finally {
+        # Clean up even when the install throws, so a failed run does not
+        # leave an installer behind for the next one to trip over.
+        Invoke-PackagerCleanup -Paths "$env:TEMP\AppPackager" -Force
+    }
 }

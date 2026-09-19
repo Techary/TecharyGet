@@ -3,7 +3,7 @@
     RootModule = 'TecharyGet.psm1'
 
     # Version number of this module.
-    ModuleVersion = '2.3'
+    ModuleVersion = '2.4'
 
     # ID used to uniquely identify this module
     GUID = 'e9c840c8-3c3e-4246-8178-52372d807654'
@@ -34,7 +34,6 @@
         # -- Intune Packaging Tools --
         'New-IntunePackage',   # The CLI Packager (with Detect/Uninstall generation)
         'New-IntunePackageUI', # The GUI Packager
-        'Show-IntunePackager', # The Wrapper for the MS Utility
 
         # -- Utilities --
         'Write-PackagerLog'
