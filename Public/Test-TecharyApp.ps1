@@ -4,42 +4,39 @@ function Test-TecharyApp {
         Reports whether an application is installed.
 
     .DESCRIPTION
-        Detection order, most precise first:
+        Reproduces winget's own correlation rather than guessing at names.
 
-          1. ProductCode from the manifest index or cache. winget records the
-             ARP subkey name here (for example "7-Zip", or an MSI product GUID),
-             so this is a direct key lookup and is definitive.
-          2. Exact DisplayName, from the custom catalogue or from -Name itself.
-          3. Substring DisplayName match, which is what this function used to do
-             exclusively. Retained so existing callers do not start returning
-             false, but reported as imprecise because it produces false
-             positives: "Teams" matches "Microsoft Teams Meeting Add-in for
-             Microsoft Office" on a machine with no Teams desktop app.
-          4. MSIX package name.
+        winget decides an installed entry corresponds to a package using four
+        exact-equality keys, OR'd together -- PackageFamilyName, ProductCode,
+        UpgradeCode and NormalizedNameAndPublisher (CompositeSource.cpp:937).
+        There is no fuzzy matching anywhere in that path. The edit-distance
+        code in ARPCorrelation.cpp is post-install only and is not used here.
 
-        Makes no network calls. The manifest index and custom catalogue are
-        read from their existing on-disk caches only, because this runs on a
-        schedule on every endpoint.
+        Order below is:
+
+          1. Strong identifiers  - product code, package family name
+          2. Name and publisher  - winget's normalised keys, the only thing
+                                   that covers the 6,443 packages declaring
+                                   no identifier at all
+          3. Custom catalogue    - display-name match, for applications that
+                                   are not winget packages
+          4. MSIX by name        - last resort
+
+        Makes no network calls beyond refreshing the index when absent: this
+        runs on a schedule on every endpoint.
 
     .PARAMETER Name
-        A winget package ID ("7zip.7zip"), a custom catalogue ID ("MyDPD"),
-        or a display name.
+        A winget package ID, a custom catalogue ID, or a display name.
 
     .PARAMETER Detailed
         Return an object describing what matched instead of a boolean.
     #>
     [CmdletBinding()]
-    param (
+    param(
         [Parameter(Mandatory=$true)]
         [string]$Name,
 
         [switch]$Detailed
-    )
-
-    $Hives = @(
-        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
-        "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall"
     )
 
     function New-Result {
@@ -54,217 +51,156 @@ function Test-TecharyApp {
         }
     }
 
-    if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { $SysArch = "arm64" }
-    elseif ([Environment]::Is64BitOperatingSystem) { $SysArch = "x64" }
-    else { $SysArch = "x86" }
+    if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { $SysArch = 'arm64' }
+    elseif ([Environment]::Is64BitOperatingSystem) { $SysArch = 'x64' }
+    else { $SysArch = 'x86' }
 
-    # --- 1. PRODUCT CODE / PACKAGE FAMILY (definitive) -----------------
-    # Three sources, most complete first: the full detection index covers
-    # every package in the winget repository; the curated manifest index and
-    # the local manifest cache cover what this machine has installed before.
-    $ProductCodes = New-Object System.Collections.Generic.List[string]
-    $Pfns         = New-Object System.Collections.Generic.List[string]
+    $Entry = $null
+    try { $Entry = Get-DetectionEntry -Id $Name -NoRefresh } catch { }
 
-    try {
-        $Entry = Get-DetectionEntry -Id $Name -NoRefresh
-        if ($Entry) {
-            foreach ($Code in $Entry.ProductCodes) { if ($Code) { $ProductCodes.Add($Code) } }
-            foreach ($Family in $Entry.Pfns) { if ($Family) { $Pfns.Add($Family) } }
-            Write-Verbose "Detection index: $($ProductCodes.Count) product code(s), $($Pfns.Count) package family name(s) for '$Name'"
-        }
-    } catch {}
+    # Normalising every ARP entry is the expensive part, so it is done once.
+    $Arp = @(Get-ArpCorrelationSet)
 
-    try {
-        $Indexed = Get-IndexedManifest -Id $Name -SysArch $SysArch -NoRefresh
-        if ($Indexed -and $Indexed.ProductCode) { $ProductCodes.Add($Indexed.ProductCode) }
-    } catch {}
+    # ---- 1. STRONG IDENTIFIERS --------------------------------------
+    $Codes    = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $Pfns     = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $Upgrades = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
-    $CachedManifest = Join-Path $env:ProgramData ("TecharyGet\ManifestCache\" + ($Name -replace '[\\/:*?"<>|]', '_') + ".json")
-    if (Test-Path $CachedManifest) {
-        try {
-            $Local = (Get-Content $CachedManifest -Raw | ConvertFrom-Json).ProductCode
-            if ($Local) { $ProductCodes.Add($Local) }
-        } catch {}
+    if ($Entry) {
+        foreach ($c in $Entry.ProductCodes) { if ($c) { [void]$Codes.Add($c) } }
+        foreach ($f in $Entry.Pfns)         { if ($f) { [void]$Pfns.Add($f) } }
+        foreach ($u in $Entry.UpgradeCodes) { if ($u) { [void]$Upgrades.Add($u) } }
     }
 
-    if ($ProductCodes.Count -gt 0) {
-        # Enumerate the machine's uninstall key NAMES once and hash-look-up each
-        # candidate, rather than probing the registry per code.
-        #
-        # The winget source carries every product code a package has ever
-        # shipped: Mozilla.Firefox alone has 5205, one per locale and version.
-        # Probing those across three hives is 15,615 registry reads and took
-        # ~384 seconds measured, which would exceed an N-central scan interval
-        # on its own. This is ~230 reads regardless of how many codes a package
-        # has. Ordinal-ignore-case because the index stores codes normalised to
-        # lower case ("7-zip") while the real key is "7-Zip", and the registry
-        # itself is case-insensitive.
-        $ArpKeys = New-Object 'System.Collections.Generic.Dictionary[string,string]' ([StringComparer]::OrdinalIgnoreCase)
-        foreach ($Hive in $Hives) {
-            foreach ($Key in (Get-ChildItem -Path $Hive -ErrorAction SilentlyContinue)) {
-                if (-not $ArpKeys.ContainsKey($Key.PSChildName)) { $ArpKeys[$Key.PSChildName] = $Key.PSPath }
-            }
-        }
+    # A manifest resolved on this machine earlier also carries a product code.
+    $Cached = Join-Path $env:ProgramData ("TecharyGet\ManifestCache\" + ($Name -replace '[\\/:*?"<>|]', '_') + ".json")
+    if (Test-Path $Cached) {
+        try {
+            $c = (Get-Content $Cached -Raw | ConvertFrom-Json).ProductCode
+            if ($c) { [void]$Codes.Add($c) }
+        } catch { }
+    }
 
-        foreach ($Code in $ProductCodes) {
-            $Path = $null
-            if ($ArpKeys.TryGetValue($Code, [ref]$Path)) {
-                $Item = Get-ItemProperty -Path $Path -ErrorAction SilentlyContinue
-                Write-Verbose "Matched on ProductCode '$Code' at $Path"
-                $R = New-Result $true 'ProductCode' $Item.DisplayName $Item.DisplayVersion $Path
-                if ($Detailed) { return $R } else { return $true }
-            }
+    foreach ($a in $Arp) {
+        if ($Codes.Count -gt 0 -and $Codes.Contains($a.Entry.ProductCode)) {
+            Write-Verbose "ProductCode '$($a.Entry.ProductCode)'"
+            $R = New-Result $true 'ProductCode' $a.Entry.DisplayName $a.Entry.DisplayVersion $a.Entry.Path
+            if ($Detailed) { return $R } else { return $true }
+        }
+        if ($Upgrades.Count -gt 0 -and $a.UpgradeCode -and $Upgrades.Contains($a.UpgradeCode)) {
+            Write-Verbose "UpgradeCode '$($a.UpgradeCode)'"
+            $R = New-Result $true 'UpgradeCode' $a.Entry.DisplayName $a.Entry.DisplayVersion $a.Entry.Path
+            if ($Detailed) { return $R } else { return $true }
         }
     }
 
     if ($Pfns.Count -gt 0) {
         $Elevated = $false
         try {
-            $Ident = [Security.Principal.WindowsIdentity]::GetCurrent()
-            $Elevated = (New-Object Security.Principal.WindowsPrincipal($Ident)).IsInRole(
+            $Id = [Security.Principal.WindowsIdentity]::GetCurrent()
+            $Elevated = (New-Object Security.Principal.WindowsPrincipal($Id)).IsInRole(
                 [Security.Principal.WindowsBuiltInRole]::Administrator)
-        } catch {}
-
+        } catch { }
         try {
-            # -AllUsers when we can: SYSTEM sees almost none of its own packages.
-            if ($Elevated) { $Installed = @(Get-AppxPackage -AllUsers -ErrorAction Stop) }
-            else { $Installed = @(Get-AppxPackage -ErrorAction SilentlyContinue) }
-
-            foreach ($Family in $Pfns) {
-                $Hit = $Installed | Where-Object { $_.PackageFamilyName -eq $Family } | Select-Object -First 1
-                if ($Hit) {
-                    Write-Verbose "Matched on PackageFamilyName '$Family'"
-                    $R = New-Result $true 'PackageFamilyName' $Hit.Name $Hit.Version $Hit.PackageFullName
+            # -AllUsers when we can: SYSTEM sees almost none of its own.
+            $Pkgs = if ($Elevated) { @(Get-AppxPackage -AllUsers -ErrorAction Stop) }
+                    else           { @(Get-AppxPackage -ErrorAction SilentlyContinue) }
+            foreach ($p in $Pkgs) {
+                if ($Pfns.Contains($p.PackageFamilyName)) {
+                    Write-Verbose "PackageFamilyName '$($p.PackageFamilyName)'"
+                    $R = New-Result $true 'PackageFamilyName' $p.Name $p.Version $p.PackageFullName
                     if ($Detailed) { return $R } else { return $true }
                 }
             }
-        } catch {}
+        } catch { }
     }
 
-    # --- 2. EXACT DISPLAY NAME ----------------------------------------
-    # A custom catalogue entry carries the real ARP DisplayName for its ID.
-    # Two lists, because a name safe to compare exactly is not safe to compare
-    # as a substring.
-    #
-    # The detection index carries each package's canonical display name, which
-    # is what bridges an ID to its ARP entry: "Google.Chrome" never matches
-    # "Google Chrome" on its own, and product codes alone do not cover it
-    # because Chrome's installed code varies by build.
-    #
-    # Those names are short and generic, so they are used for exact comparison
-    # ONLY. Feeding them to the substring tier reports anything that merely
-    # contains them: "Steam" matches the MSIX package "MSTeams", and "Git"
-    # matches "GitHub CLI". Both were observed.
-    $ExactCandidates = New-Object System.Collections.Generic.List[string]
-    $LooseCandidates = New-Object System.Collections.Generic.List[string]
+    # ---- 2. NORMALISED NAME AND PUBLISHER ---------------------------
+    if ($Entry -and $Entry.NormNames.Count -gt 0 -and $Entry.NormPublishers.Count -gt 0) {
 
-    $ExactCandidates.Add($Name)
-    $LooseCandidates.Add($Name)
+        # Architecture override: if the package carries any arch-suffixed
+        # name, ONLY those are used. Winget erases the plain filters rather
+        # than falling back to them (Interface_2_0.cpp:483).
+        $ArchNames = @($Entry.NormNames | Where-Object { $_ -match '\((X64|X86)\)$' })
+        $Query = if ($ArchNames.Count -gt 0) { $ArchNames } else { @($Entry.NormNames) }
 
+        $QuerySet = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+        foreach ($q in $Query) { if ($q) { [void]$QuerySet.Add($q) } }
+
+        $PubSet = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+        foreach ($p in $Entry.NormPublishers) { if ($p) { [void]$PubSet.Add($p) } }
+
+        $Ambiguous = $null
+        try { $Ambiguous = Get-AmbiguousPairSet -NoRefresh } catch { }
+
+        foreach ($a in $Arp) {
+            # An entry with no publisher can never match by name: the filters
+            # are a cartesian product of names x publishers, and an empty
+            # publisher list yields nothing.
+            if ([string]::IsNullOrEmpty($a.NormPublisher)) { continue }
+            if (-not $PubSet.Contains($a.NormPublisher)) { continue }
+
+            foreach ($n in $a.NormNames) {
+                if ([string]::IsNullOrEmpty($n)) { continue }
+                if (-not $QuerySet.Contains($n)) { continue }
+
+                # Reverse-correlation veto: winget drops a weak match when the
+                # installed entry correlates to more than one available
+                # package (CompositeSource.cpp:1651). A shared name+publisher
+                # pair is exactly that case -- mozillathunderbird+mozilla is
+                # carried by 133 package ids, and without this one Thunderbird
+                # entry reports all 133 as installed.
+                #
+                # Packages with a real identifier are unaffected: a strong
+                # match returns above and is never vetoed. That is how Google
+                # Chrome still resolves despite sharing its pair with
+                # Google.Chrome.EXE -- it matches on UpgradeCode first.
+                if ($Ambiguous -and $Ambiguous.Contains($n + '|' + $a.NormPublisher)) {
+                    Write-Verbose "Vetoed: '$n' + '$($a.NormPublisher)' is shared by more than one package"
+                    continue
+                }
+
+                Write-Verbose "NormalizedNameAndPublisher '$n' + '$($a.NormPublisher)'"
+                $R = New-Result $true 'NameAndPublisher' $a.Entry.DisplayName $a.Entry.DisplayVersion $a.Entry.Path
+                if ($Detailed) { return $R } else { return $true }
+            }
+        }
+    }
+
+    # ---- 3. CUSTOM CATALOGUE ----------------------------------------
+    # Applications that are not winget packages have no index entry, so
+    # correlation cannot help. Their catalogue DisplayName is authoritative.
+    $CustomName = $null
     try {
-        $CustomApp = Get-CustomApp -Id $Name -NoRefresh
-        if ($CustomApp -and $CustomApp.DisplayName) {
-            $ExactCandidates.Add($CustomApp.DisplayName)
-            $LooseCandidates.Add($CustomApp.DisplayName)
-        }
-    } catch {}
+        $Custom = Get-CustomApp -Id $Name -NoRefresh
+        if ($Custom -and $Custom.DisplayName) { $CustomName = $Custom.DisplayName }
+    } catch { }
 
-    if ($Entry -and $Entry.Name) { $ExactCandidates.Add($Entry.Name) }
-
-    $AllArp = foreach ($Hive in $Hives) {
-        Get-ItemProperty -Path (Join-Path $Hive '*') -ErrorAction SilentlyContinue
-    }
-
-    foreach ($Candidate in $ExactCandidates) {
-        $Exact = $AllArp | Where-Object { $_.DisplayName -eq $Candidate } | Select-Object -First 1
-        if ($Exact) {
-            Write-Verbose "Matched exactly on DisplayName '$Candidate'"
-            $R = New-Result $true 'ExactName' $Exact.DisplayName $Exact.DisplayVersion $Exact.PSPath
-            if ($Detailed) { return $R } else { return $true }
+    foreach ($candidate in @($CustomName, $Name)) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        foreach ($a in $Arp) {
+            if ($a.Entry.DisplayName -eq $candidate) {
+                Write-Verbose "Exact display name '$candidate'"
+                $R = New-Result $true 'ExactName' $a.Entry.DisplayName $a.Entry.DisplayVersion $a.Entry.Path
+                if ($Detailed) { return $R } else { return $true }
+            }
         }
     }
 
-    # --- 2b. CANONICAL NAME AS A BOUNDED PREFIX -----------------------
-    # ARP routinely appends a locale or version to the product name, so an
-    # exact comparison misses by a few characters:
-    #
-    #   index   Microsoft.Office -> "Microsoft 365 Apps for enterprise"
-    #   ARP                         "Microsoft 365 Apps for enterprise - en-us"
-    #
-    # Detection returned False forever for Office, which in a self-healing
-    # pair means the install policy reinstalls it on every scan.
-    #
-    # A plain substring match would fix that and reintroduce the false
-    # positives tier 3 is restricted to avoid. The rule that satisfies both is
-    # a prefix that ends on a token boundary: the entry must START with the
-    # candidate, and the next character must not be alphanumeric.
-    #
-    #   "Microsoft 365 Apps for enterprise - en-us"  next char " "  -> match
-    #   "7-Zip 26.03 (x64)"            vs "7-Zip"    next char " "  -> match
-    #   "GitHub CLI"                   vs "Git"      next char "H"  -> no
-    #   "MSTeams"                      vs "Steam"    not a prefix   -> no
-    foreach ($Candidate in $ExactCandidates) {
-        if ([string]::IsNullOrWhiteSpace($Candidate)) { continue }
-
-        $Bounded = $AllArp | Where-Object {
-            $Display = $_.DisplayName
-            if ([string]::IsNullOrEmpty($Display)) { return $false }
-            if (-not $Display.StartsWith($Candidate, [StringComparison]::OrdinalIgnoreCase)) { return $false }
-            if ($Display.Length -eq $Candidate.Length) { return $true }
-            -not [char]::IsLetterOrDigit($Display[$Candidate.Length])
-        } | Select-Object -First 1
-
-        if ($Bounded) {
-            Write-Verbose "Matched '$Candidate' as a bounded prefix of '$($Bounded.DisplayName)'"
-            $R = New-Result $true 'NamePrefix' $Bounded.DisplayName $Bounded.DisplayVersion $Bounded.PSPath
-            if ($Detailed) { return $R } else { return $true }
-        }
-    }
-
-    # --- 3. SUBSTRING (imprecise, kept for compatibility) -------------
-    # Loose list only. A canonical name from the index is too generic to
-    # widen with wildcards.
-    foreach ($Candidate in $LooseCandidates) {
-        # Escaped: an unescaped name containing [ or ] is a wildcard pattern,
-        # which previously made the comparison silently match nothing.
-        $Pattern = "*" + [System.Management.Automation.WildcardPattern]::Escape($Candidate) + "*"
-        $Loose = $AllArp | Where-Object { $_.DisplayName -like $Pattern } | Select-Object -First 1
-        if ($Loose) {
-            Write-Verbose "Matched '$Candidate' only as a substring of '$($Loose.DisplayName)'. This is imprecise; add the package to the manifest index for an exact ProductCode match."
-            $R = New-Result $true 'Substring' $Loose.DisplayName $Loose.DisplayVersion $Loose.PSPath
-            if ($Detailed) { return $R } else { return $true }
-        }
-    }
-
-    # --- 4. MSIX ------------------------------------------------------
-    # SYSTEM sees almost no packages of its own, so enumerate for all users
-    # when we are able to.
-    $IsElevated = $false
-    try {
-        $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-        $IsElevated = (New-Object Security.Principal.WindowsPrincipal($Identity)).IsInRole(
-            [Security.Principal.WindowsBuiltInRole]::Administrator)
-    } catch {}
-
-    # Loose list only, for the same reason: "Steam" as a wildcard matches the
-    # MSIX package MSTeams, which was reported as Valve.Steam being installed
-    # on a machine that has never had it.
-    foreach ($Candidate in $LooseCandidates) {
-        $Pattern = "*" + [System.Management.Automation.WildcardPattern]::Escape($Candidate) + "*"
-        $Msix = $null
+    # ---- 4. MSIX BY NAME --------------------------------------------
+    foreach ($candidate in @($CustomName, $Name)) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        $Pattern = '*' + [Management.Automation.WildcardPattern]::Escape($candidate) + '*'
         try {
-            if ($IsElevated) { $Msix = Get-AppxPackage -AllUsers -Name $Pattern -ErrorAction SilentlyContinue | Select-Object -First 1 }
-            if (-not $Msix)  { $Msix = Get-AppxPackage -Name $Pattern -ErrorAction SilentlyContinue | Select-Object -First 1 }
-        } catch {}
-
-        if ($Msix) {
-            Write-Verbose "Matched MSIX package '$($Msix.Name)'"
-            $R = New-Result $true 'Msix' $Msix.Name $Msix.Version $Msix.PackageFullName
-            if ($Detailed) { return $R } else { return $true }
-        }
+            $Msix = Get-AppxPackage -Name $Pattern -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($Msix) {
+                Write-Verbose "MSIX '$($Msix.Name)'"
+                $R = New-Result $true 'Msix' $Msix.Name $Msix.Version $Msix.PackageFullName
+                if ($Detailed) { return $R } else { return $true }
+            }
+        } catch { }
     }
 
-    # --- 5. NOT FOUND -------------------------------------------------
     $R = New-Result $false 'None' $null $null $null
     if ($Detailed) { return $R } else { return $false }
 }

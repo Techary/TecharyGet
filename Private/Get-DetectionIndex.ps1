@@ -82,10 +82,37 @@ function Get-DetectionEntry {
     if (-not $Entry) { return $null }
 
     return [PSCustomObject]@{
-        Id           = $Id
-        Name         = $Entry.Name
-        Version      = $Entry.Version
-        ProductCodes = @($Entry.ProductCodes)
-        Pfns         = @($Entry.Pfns)
+        Id             = $Id
+        Name           = $Entry.Name
+        Version        = $Entry.Version
+        ProductCodes   = @($Entry.ProductCodes)
+        Pfns           = @($Entry.Pfns)
+        UpgradeCodes   = @($Entry.UpgradeCodes)
+        NormNames      = @($Entry.NormNames)
+        NormPublishers = @($Entry.NormPublishers)
     }
+}
+
+function Get-AmbiguousPairSet {
+    <#
+    .SYNOPSIS
+        Name+publisher pairs carried by more than one package.
+
+    .DESCRIPTION
+        winget drops a weak name match when the installed entry correlates to
+        more than one available package. Reproducing that faithfully needs a
+        full reverse index; this is the cheap half of it. Suppressing the
+        match is the safe direction: mozillathunderbird+mozilla is shared by
+        133 package ids, so one Thunderbird entry would otherwise report all
+        133 as installed.
+    #>
+    [CmdletBinding()]
+    param([switch]$NoRefresh)
+
+    $Index = Get-DetectionIndex -NoRefresh:$NoRefresh
+    $Set = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    if ($Index -and $Index.AmbiguousPairs) {
+        foreach ($p in $Index.AmbiguousPairs) { if ($p) { [void]$Set.Add($p) } }
+    }
+    return $Set
 }
