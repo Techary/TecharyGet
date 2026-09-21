@@ -58,39 +58,73 @@ jobs:
           # but the entry still carries the canonical display name, and that is
           # what bridges an ID to its ARP entry: "Valve.Steam" never matches
           # "Steam" on its own. A name-only row costs about 80 bytes.
+          # Kinds: P product code, F package family name, M normalised name,
+          # B normalised publisher, N name-only placeholder.
+          #
+          # M and B are winget's OWN correlation keys, from norm_names2 and
+          # norm_publishers2. They are what makes this work for the 6,443
+          # packages that declare no product code and no package family name
+          # -- Microsoft.Office among them. A name match is only valid when a
+          # publisher matches too, so both must ship.
           sqlite3 "$DB" -json "
             SELECT p.id AS Id, p.name AS Name, p.latest_version AS Version,
                    'P' AS Kind, c.productcode AS Value
             FROM packages p JOIN productcodes2 c ON c.package = p.rowid
             UNION ALL
-            SELECT p.id, p.name, p.latest_version,
-                   'F', f.pfn
+            SELECT p.id, p.name, p.latest_version, 'F', f.pfn
             FROM packages p JOIN pfns2 f ON f.package = p.rowid
             UNION ALL
-            SELECT p.id, p.name, p.latest_version,
-                   'N', NULL
+            SELECT p.id, p.name, p.latest_version, 'M', n.norm_name
+            FROM packages p JOIN norm_names2 n ON n.package = p.rowid
+            UNION ALL
+            SELECT p.id, p.name, p.latest_version, 'B', b.norm_publisher
+            FROM packages p JOIN norm_publishers2 b ON b.package = p.rowid
+            UNION ALL
+            SELECT p.id, p.name, p.latest_version, 'U', u.upgradecode
+            FROM packages p JOIN upgradecodes2 u ON u.package = p.rowid
+            UNION ALL
+            SELECT p.id, p.name, p.latest_version, 'N', NULL
             FROM packages p
-            WHERE NOT EXISTS (SELECT 1 FROM productcodes2 WHERE package = p.rowid)
-              AND NOT EXISTS (SELECT 1 FROM pfns2 WHERE package = p.rowid)
             ORDER BY 1;" > pairs.json
 
+          # Name+publisher pairs carried by more than one package. winget
+          # resolves these with a reverse-correlation veto; without the full
+          # reverse index we suppress the weak match instead, which is the
+          # safe direction. mozillathunderbird+mozilla alone is shared by 133
+          # package ids, so skipping this over-reports badly.
+          sqlite3 "$DB" -json "
+            SELECT n.norm_name AS N, b.norm_publisher AS B, COUNT(DISTINCT p.rowid) AS C
+            FROM packages p
+            JOIN norm_names2 n      ON n.package = p.rowid
+            JOIN norm_publishers2 b ON b.package = p.rowid
+            GROUP BY n.norm_name, b.norm_publisher
+            HAVING COUNT(DISTINCT p.rowid) > 1;" > ambiguous.json
+
           NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          jq --arg now "$NOW" '
+          jq --arg now "$NOW" --slurpfile amb ambiguous.json '
             group_by(.Id)
             | map({
                 key: .[0].Id,
                 value: {
                   Name: .[0].Name,
                   Version: .[0].Version,
-                  ProductCodes: [ .[] | select(.Kind == "P") | .Value ],
-                  Pfns:         [ .[] | select(.Kind == "F") | .Value ]
+                  ProductCodes:   [ .[] | select(.Kind == "P") | .Value ],
+                  Pfns:           [ .[] | select(.Kind == "F") | .Value ],
+                  NormNames:      [ .[] | select(.Kind == "M") | .Value ],
+                  NormPublishers: [ .[] | select(.Kind == "B") | .Value ],
+                  UpgradeCodes:   [ .[] | select(.Kind == "U") | .Value ]
                 }})
             | from_entries
             | { Generated: $now,
                 Source: "winget source2 index",
+                Normalizer: "Initial",
                 PackageCount: length,
+                AmbiguousPairs: ( $amb[0] | map(.N + "|" + .B) ),
                 Packages: . }
           ' pairs.json > Index/Detection.json
+
+          echo "ambiguous name+publisher pairs: $(jq -r '.AmbiguousPairs | length' Index/Detection.json)"
+          echo "packages with a norm name:      $(jq -r '[.Packages[] | select(.NormNames | length > 0)] | length' Index/Detection.json)"
 
           echo "detection index: $(jq -r .PackageCount Index/Detection.json) packages, $(du -h Index/Detection.json | cut -f1)"
 
