@@ -1,0 +1,199 @@
+{
+  "Generated": "2026-11-07T10:18:54.0102151Z",
+  "Source": "microsoft/winget-pkgs",
+  "PackageCount": 12,
+  "Packages": {
+    "7zip.7zip": {
+      "x64": {
+        "Version": "26.05",
+        "Url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-x64.exe",
+        "SilentArgs": "/S",
+        "InstallerType": "exe",
+        "ProductCode": "7-Zip"
+      },
+      "arm64": {
+        "Version": "26.05",
+        "Url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-arm64.exe",
+        "SilentArgs": "/S",
+        "InstallerType": "exe",
+        "ProductCode": "7-Zip"
+      }
+    },
+    "8x8.Work": {
+      "x64": {
+        "Version": "8.38.4",
+        "Url": "https://work-desktop-assets.8x8.com/prod-publish/ga/work-64-msi-v8.38.4-1.msi",
+        "SilentArgs": "--silent",
+        "InstallerType": "wix",
+        "ProductCode": "{F8D6C3E1-B0FA-4136-BE50-46DBB3D9986D}"
+      },
+      "arm64": {
+        "Version": "8.38.4",
+        "Url": "https://work-desktop-assets.8x8.com/prod-publish/ga/work-64-msi-v8.38.4-1.msi",
+        "SilentArgs": "--silent",
+        "InstallerType": "exe",
+        "ProductCode": "{F8D6C3E1-B0FA-4136-BE50-46DBB3D9986D}"
+      }
+    },
+    "Adobe.Acrobat.Reader.64-bit": {
+      "x64": {
+        "Version": "26.003.22075",
+        "Url": "https://ardownload2.adobe.com/pub/adobe/acrobat/win/AcrobatDC/2600322075/AcroRdrDCx642600322075_MUI.exe",
+        "SilentArgs": "-sfx_nu /sAll /rs /msi",
+        "InstallerType": "exe",
+        "ProductCode": "{AC76BA86-1033-FF00-7760-BC15014EA700}"
+      },
+      "arm64": {
+        "Version": "26.003.22075",
+        "Url": "https://ardownload2.adobe.com/pub/adobe/acrobat/win/AcrobatDC/2600322075/AcroRdrDCx642600322075_MUI.exe",
+        "SilentArgs": "-sfx_nu /sAll /rs /msi",
+        "InstallerType": "exe",
+        "ProductCode": "{AC76BA86-1033-FF00-7760-BC15014EA700}"
+      }
+    },
+    "Dell.CommandUpdate": {
+      "x64": {
+        "Version": "5.7.0",
+        "Url": "https://dl.dell.com/FOLDER14424243M/1/Dell-Command-Update-Application_RXT5N_WIN64_5.7.0_A00.EXE",
+        "SilentArgs": "/passthrough /S /V/quiet /V/norestart",
+        "InstallerType": "exe",
+        "ProductCode": "{96322198-2DBD-4C30-8BAA-E61A5340C663}"
+      },
+      "arm64": {
+        "Version": "5.7.0",
+        "Url": "https://dl.dell.com/FOLDER14424243M/1/Dell-Command-Update-Application_RXT5N_WIN64_5.7.0_A00.EXE",
+        "SilentArgs": "/passthrough /S /V/quiet /V/norestart",
+        "InstallerType": "exe",
+        "ProductCode": "{96322198-2DBD-4C30-8BAA-E61A5340C663}"
+      }
+    },
+    "Google.Chrome": {
+      "x64": {
+        "Version": "157.0.8103.39",
+        "Url": "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi",
+        "SilentArgs": null,
+        "InstallerType": "exe",
+        "ProductCode": "{807524DE-67B8-3922-BB35-773E5AFB6EBB}"
+      },
+      "arm64": {
+        "Version": "157.0.8103.39",
+        "Url": "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise_arm64.msi",
+        "SilentArgs": null,
+        "InstallerType": "exe",
+        "ProductCode": "{8CAFEFE2-CDDF-3198-8DA4-9C19DD9F0714}"
+      }
+    },
+    "Microsoft.PowerToys": {
+      "x64": {
+        "Version": "0.102.3101",
+        "Url": "https://github.com/microsoft/PowerToys/releases/download/v0.102.3101/PowerToysUserSetup-0.102.3101.0-x64.exe",
+        "SilentArgs": "/quiet /norestart",
+        "InstallerType": "exe",
+        "ProductCode": null
+      },
+      "arm64": {
+        "Version": "0.102.3101",
+        "Url": "https://github.com/microsoft/PowerToys/releases/download/v0.102.3101/PowerToysUserSetup-0.102.3101.0-arm64.exe",
+        "SilentArgs": "/quiet /norestart",
+        "InstallerType": "exe",
+        "ProductCode": null
+      }
+    },
+    "Microsoft.VisualStudioCode": {
+      "x64": {
+        "Version": "1.143.1",
+        "Url": "https://vscode.download.prss.microsoft.com/dbazure/download/stable/e646868227c3e3a9e3f24277c8c7220be42c0be7/VSCodeUserSetup-x64-1.143.1.exe",
+        "SilentArgs": null,
+        "InstallerType": "exe",
+        "ProductCode": null
+      },
+      "arm64": {
+        "Version": "1.143.1",
+        "Url": "https://vscode.download.prss.microsoft.com/dbazure/download/stable/e646868227c3e3a9e3f24277c8c7220be42c0be7/VSCodeUserSetup-arm64-1.143.1.exe",
+        "SilentArgs": null,
+        "InstallerType": "exe",
+        "ProductCode": null
+      }
+    },
+    "Mozilla.Firefox": {
+      "x64": {
+        "Version": "159.0",
+        "Url": "https://download-installer.cdn.mozilla.net/pub/firefox/releases/159.0/win64/en-US/Firefox%20Setup%20159.0.exe",
+        "SilentArgs": "/S /PreventRebootRequired=true",
+        "InstallerType": "exe",
+        "ProductCode": "Mozilla Firefox"
+      },
+      "arm64": {
+        "Version": "159.0",
+        "Url": "https://download-installer.cdn.mozilla.net/pub/firefox/releases/159.0/win64-aarch64/en-US/Firefox%20Setup%20159.0.exe",
+        "SilentArgs": "/S /PreventRebootRequired=true",
+        "InstallerType": "exe",
+        "ProductCode": "Mozilla Firefox"
+      }
+    },
+    "Notepad++.Notepad++": {
+      "x64": {
+        "Version": "8.9.9",
+        "Url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.9/npp.8.9.9.Installer.x64.exe",
+        "SilentArgs": null,
+        "InstallerType": "nullsoft",
+        "ProductCode": "Notepad++"
+      },
+      "arm64": {
+        "Version": "8.9.9",
+        "Url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.9/npp.8.9.9.Installer.arm64.exe",
+        "SilentArgs": null,
+        "InstallerType": "nullsoft",
+        "ProductCode": "Notepad++"
+      }
+    },
+    "SublimeHQ.SublimeText.4": {
+      "x64": {
+        "Version": "4.0.0.421500",
+        "Url": "https://download.sublimetext.com/sublime_text_build_4215_x64.zip",
+        "SilentArgs": null,
+        "InstallerType": "zip",
+        "ProductCode": "Sublime Text_is1"
+      },
+      "arm64": {
+        "Version": "4.0.0.421500",
+        "Url": "https://download.sublimetext.com/sublime_text_build_4215_x64.zip",
+        "SilentArgs": null,
+        "InstallerType": "exe",
+        "ProductCode": "Sublime Text_is1"
+      }
+    },
+    "VideoLAN.VLC": {
+      "x64": {
+        "Version": "3.0.24",
+        "Url": "https://download.videolan.org/pub/videolan/vlc/3.0.24/win64/vlc-3.0.24-win64.exe",
+        "SilentArgs": null,
+        "InstallerType": "nullsoft",
+        "ProductCode": "VLC media player"
+      },
+      "arm64": {
+        "Version": "3.0.24",
+        "Url": "https://download.videolan.org/pub/videolan/vlc/3.0.24/winarm64/vlc-3.0.24-winarm64.exe",
+        "SilentArgs": null,
+        "InstallerType": "nullsoft",
+        "ProductCode": "VLC media player"
+      }
+    },
+    "Zoom.Zoom": {
+      "x64": {
+        "Version": "7.2.51704",
+        "Url": "https://zoom.us/client/7.2.5.51704/ZoomInstallerFull.msi?archType=x64",
+        "SilentArgs": null,
+        "InstallerType": "exe",
+        "ProductCode": "{BFA42BDB-0E66-4161-8D09-B48D2C9FC90F}"
+      },
+      "arm64": {
+        "Version": "7.2.51704",
+        "Url": "https://zoom.us/client/7.2.5.51704/ZoomInstallerFull.msi?archType=winarm64",
+        "SilentArgs": null,
+        "InstallerType": "exe",
+        "ProductCode": "{00E474D3-3753-46AA-AC37-D2FC72A27048}"
+      }
+    }
+  }
+}
